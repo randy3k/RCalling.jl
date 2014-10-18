@@ -34,7 +34,3 @@ if rebuild
         run(`make`)
     end
 end
-
-# Julia call Embedded R interface
-handler = dlopen(shared_file)
-rsym(s) = dlsym(handler, s)

@@ -1,3 +1,8 @@
+# Julia call Embedded R interface
+handler = dlopen(shared_file)
+# TODO: symbol cache
+rsym(s) = dlsym(handler, s)
+
 function init(verbose::Bool = false)
     rhome = rstrip(readall(`R RHOME`))
     if verbose
@@ -6,18 +11,18 @@ function init(verbose::Bool = false)
 
     ENV["R_HOME"] = rhome
     ret = ccall(rsym(:RCall_init), Int32, ())
-
-    if isinteractive()
-        timeout = Timer((x)-> R_ProcessEvents())
-        start_timer(timeout, 0.05, 0.05)
-    end
     return ret
 end
 
+function gui()
+    if isinteractive()
+        timeout = Timer((x)-> ProcessEvents())
+        start_timer(timeout, 0.04, 0.04)
+    end
+    nothing
+end
 
-function R_ProcessEvents()
-  res = ccall(rsym(:RCall_ProcessEvents), Ptr{Void}, ())
-  if res == -1
-    error("Error in Process Events")
-  end
+function ProcessEvents()
+    ccall(rsym(:RCall_ProcessEvents), Void, ())
+    nothing
 end

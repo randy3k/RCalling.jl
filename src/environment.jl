@@ -1,0 +1,86 @@
+# TODO: cache GlobalEnv
+function GlobalEnv()
+    _factory(ccall(rsym(:RCall_GlobalEnv), Ptr{Void}, ()))
+end
+
+function BaseEnv()
+    _factory(ccall(rsym(:RCall_BaseEnv), Ptr{Void}, ()))
+end
+
+function Base.getindex(x::REnvironment, i::ASCIIString)
+    ptr = ccall(rsym(:sexp_listsubset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x.ptr, RArray(i).ptr)
+    _factory(ptr)
+end
+
+function Base.keys(x::REnvironment)
+    ls = rget("ls", GlobalEnv())
+    convert(Array, rcall(ls, Any[x]))
+end
+
+function rget(x::ASCIIString, env::REnvironment)
+    ptr = ccall(rsym(:RCall_findVar), Ptr{Void}, (Ptr{Uint8},Ptr{Void}), pointer(x.data), env.ptr)
+    _factory(ptr)
+end
+rget(x::ASCIIString) = rget(x, GlobalEnv())
+
+function rassign(name::ASCIIString, x::RAny, env::REnvironment)
+    assign_fun = rget("assign", GlobalEnv())
+    rcall(assign_fun, Any[RArray(name), x, env], ["", "", "env"])
+    nothing
+end
+rassign(name::ASCIIString, x::RAny) = rassign(name, x, GlobalEnv())
+
+function get_package(x::ASCIIString)
+    as_environment = rget("as.environment", GlobalEnv())
+    rcall(as_environment, Any[RArray("package:$x")])
+end
+
+# import
+const julia_reserved = Set{ASCIIString}((
+    "while", "if", "for", "try", "return", "break", "continue", "function",
+    "macro", "quote", "let", "local", "global", "const", "abstract",
+    "typealias", "type", "bitstype", "immutable", "ccall", "do", "module",
+    "baremodule", "using", "import", "export", "importall", "false", "true",
+    "rget")
+)
+
+function rlibrary_wrap(x::ASCIIString, s::Symbol)
+    R("library($x)")
+    pkg = get_package(x)
+    members = map((k) ->
+        begin
+            robj = pkg[k]
+            typeof(robj) <: RFunction ? (k, convert(Function, robj)) : (k, robj)
+        end,
+        keys(pkg)
+    )
+    filter!(m -> !(m[1] in julia_reserved), members)
+    m = Module(s)
+    consts = [Expr(:const, Expr(:(=), symbol(x[1]), x[2])) for x in members]
+    exports = [symbol(x[1]) for x in members]
+    eval(m, Expr(:toplevel, consts..., :(rget(s) = getindex($(pkg), s)), Expr(:export, exports...)))
+    m
+end
+
+macro rimport(x, args...)
+    pkgname = string(x)
+    if length(args)==2 && args[1] == :as
+        m = args[2]
+    elseif length(args)==0
+        m = x
+    else
+        throw(ArgumentError("invalid import syntax."))
+    end
+    symbol = Expr(:quote, m)
+    quote
+        if !isdefined($symbol)
+            const $(esc(m)) = rlibrary_wrap($pkgname, $symbol)
+            nothing
+        elseif typeof($(esc(m))) <: Module && :rget in names($(esc(m)), true)
+            nothing
+        else
+            error("$($pkgname) already exists!")
+            nothing
+        end
+    end
+end

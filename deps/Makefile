@@ -1,7 +1,12 @@
 CC = gcc
-CPPFLAGS = `R CMD config --cppflags`
+CPPFLAGS = $(shell R CMD config --cppflags) -I./uv/
+CPPFLAGS +=	-I$(shell julia -e 'print(abspath(joinpath(JULIA_HOME,"..","include", "julia")))')
+CPPFLAGS := $(CPPFLAGS)
+
 CFLAGS = -g -Wall
-LDFLAGS = `R CMD config --ldflags` -dynamiclib
+LDFLAGS = $(shell R CMD config --ldflags) -dynamiclib -ljulia
+LDFLAGS += -L$(shell julia -e 'print(abspath(joinpath(JULIA_HOME, "..", "lib", "julia")))')
+LDFLAGS := $(LDFLAGS)
 
 SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:.c=.o)
