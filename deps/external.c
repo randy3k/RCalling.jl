@@ -50,13 +50,10 @@ void RCall_registerRoutines()
 SEXP jr_func_wrap(void* p)
 {
     ParseStatus status;
-    SEXP cmdSexp, s, t, ext;
-    cmdSexp =  PROTECT(allocVector(STRSXP, 1));
-    SET_STRING_ELT(cmdSexp, 0, mkChar("function(...) {.External(\".RCall\", NULL, ...)}"));
-    s = t = PROTECT(R_ParseVector(cmdSexp, -1, &status, R_NilValue));
+    SEXP s, t, ext;
+    s = t = PROTECT(R_ParseVector(mkString("function(...) {.External(\".RCall\", NULL, ...)}"), -1, &status, R_NilValue));
     ext = PROTECT(R_MakeExternalPtr(p, R_NilValue, R_NilValue));
     SETCADDR(CADR(CADDR(VECTOR_ELT(t ,0))), ext);
-
     int errorOccurred = 0;
     SEXP ret;
     ret = PROTECT(R_tryEval(VECTOR_ELT(s,0), R_GlobalEnv, &errorOccurred));
