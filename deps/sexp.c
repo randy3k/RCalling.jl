@@ -64,28 +64,21 @@ SEXP sexp_get_attr(const SEXP sexp, char *name)
 void sexp_print(const SEXP s)
 {
     int errorOccurred;
-    SEXP fun, e;
+    SEXP fun, ret;
     fun = PROTECT(Rf_findFun(Rf_install("print"),  R_GlobalEnv));
-    e = PROTECT(allocVector(LANGSXP, 2));
-    SETCAR(e, fun);
-    SETCAR(CDR(e), s);
-    R_tryEval(e, R_GlobalEnv, &errorOccurred);
-    UNPROTECT(2);
+    ret = R_tryEval(Rf_lang2(fun, s), R_GlobalEnv, &errorOccurred);
+    UNPROTECT(1);
 }
 
 // one argument subset
 SEXP sexp_subset(const SEXP s, const SEXP i)
 {
     int errorOccurred;
-    SEXP fun, e, ret;
+    SEXP fun, ret;
     fun = PROTECT(Rf_findFun(Rf_install(".subset"),  R_GlobalEnv));
-    e = PROTECT(allocVector(LANGSXP, 3));
-    SETCAR(e, fun);
-    SETCAR(CDR(e), s);
-    SETCAR(CDDR(e), i);
-    ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
+    ret = R_tryEval(Rf_lang3(fun, s, i), R_GlobalEnv, &errorOccurred);
     R_PreserveObject(ret);
-    UNPROTECT(2);
+    UNPROTECT(1);
     return ret;
 }
 
@@ -93,16 +86,11 @@ SEXP sexp_subset(const SEXP s, const SEXP i)
 SEXP sexp_subset2(const SEXP s, const SEXP i, const SEXP j)
 {
     int errorOccurred;
-    SEXP fun, e, ret;
+    SEXP fun, ret;
     fun = PROTECT(Rf_findFun(Rf_install(".subset"),  R_GlobalEnv));
-    e = PROTECT(allocVector(LANGSXP, 4));
-    SETCAR(e, fun);
-    SETCADR(e, s);
-    SETCADDR(e, i);
-    SETCADDDR(e, j);
-    ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
+    ret = R_tryEval(Rf_lang4(fun, s, i, j), R_GlobalEnv, &errorOccurred);
     R_PreserveObject(ret);
-    UNPROTECT(2);
+    UNPROTECT(1);
     return ret;
 }
 
@@ -110,15 +98,11 @@ SEXP sexp_subset2(const SEXP s, const SEXP i, const SEXP j)
 SEXP sexp_listsubset(const SEXP s, const SEXP i)
 {
     int errorOccurred;
-    SEXP fun, e, ret;
+    SEXP fun, ret;
     fun = PROTECT(Rf_findFun(Rf_install(".subset2"),  R_GlobalEnv));
-    e = PROTECT(allocVector(LANGSXP, 3));
-    SETCAR(e, fun);
-    SETCAR(CDR(e), s);
-    SETCAR(CDDR(e), i);
-    ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
+    ret = R_tryEval(Rf_lang3(fun, s, i), R_GlobalEnv, &errorOccurred);
     R_PreserveObject(ret);
-    UNPROTECT(2);
+    UNPROTECT(1);
     return ret;
 }
 
@@ -135,25 +119,6 @@ void * sexp_pointer(const SEXP x)
             break;
         case REALSXP:
             p = REAL(x);
-            break;
-        default:
-            p = 0;
-    }
-    return p;
-}
-
-void * sexp_str_pointer(const SEXP x)
-{
-    char **p;
-    int i, n;
-    switch (TYPEOF(x))
-    {
-        case STRSXP:
-            n = LENGTH(x);
-            p = (char**) malloc(sizeof(char*) * n);
-            // p is freed in julia
-            for(i=0;i<n;i++)
-                p[i] = (char*) CHAR(STRING_ELT(x,i));
             break;
         default:
             p = 0;
