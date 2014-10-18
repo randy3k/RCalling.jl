@@ -58,6 +58,6 @@ SEXP jr_func_wrap(void* p)
     SEXP ret;
     ret = PROTECT(R_tryEval(VECTOR_ELT(s,0), R_GlobalEnv, &errorOccurred));
     R_PreserveObject(ret);
-    UNPROTECT(4);
+    UNPROTECT(3);
     return ret;
 }
