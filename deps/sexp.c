@@ -64,9 +64,9 @@ SEXP sexp_get_attr(const SEXP sexp, char *name)
 void sexp_print(const SEXP s)
 {
     int errorOccurred;
-    SEXP fun, ret;
+    SEXP fun;
     fun = PROTECT(Rf_findFun(Rf_install("print"),  R_GlobalEnv));
-    ret = R_tryEval(Rf_lang2(fun, s), R_GlobalEnv, &errorOccurred);
+    R_tryEval(Rf_lang2(fun, s), R_GlobalEnv, &errorOccurred);
     UNPROTECT(1);
 }
 

@@ -25,7 +25,7 @@ SEXP RCall_eval(SEXP e, SEXP env)
 {
     int errorOccurred;
     int count = 0;
-    SEXP ans;
+    SEXP ans = R_NilValue;
     for (int i = 0; i < LENGTH(e); i++)
     {
         ans = PROTECT(R_tryEval(VECTOR_ELT(e, i), env, &errorOccurred));
