@@ -1,14 +1,14 @@
-#include <stdio.h>
-#define USE_RINTERNALS
-#include <Rdefines.h>
 #include <stdbool.h>
+#include <R.h>
+#include <Rinternals.h>
+#include <Rdefines.h>
 #include <julia.h>
 // some of the followings are adapted from https://github.com/armgong/RJulia/blob/master/src/R_Julia.c
 
 #define UTF8_MASK (1<<3)
 #define ASCII_MASK (1<<6)
-#define IS_ASCII(x) ((x)->sxpinfo.gp & ASCII_MASK)
-#define IS_UTF8(x) ((x)->sxpinfo.gp & UTF8_MASK)
+#define IS_ASCII(x) (ENVFLAGS(x) & ASCII_MASK)
+#define IS_UTF8(x) (ENVFLAGS(x) & UTF8_MASK)
 
 static jl_tuple_t *rj_dim(SEXP ss)
 {

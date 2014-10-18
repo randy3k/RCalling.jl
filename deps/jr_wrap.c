@@ -1,6 +1,7 @@
-#include <stdio.h>
-#include <Rdefines.h>
 #include <stdbool.h>
+#include <R.h>
+#include <Rinternals.h>
+#include <Rdefines.h>
 #include <julia.h>
 // mostly adapted from https://github.com/armgong/RJulia/blob/master/src/Julia_R.c
 

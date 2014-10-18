@@ -1,6 +1,9 @@
-#include <stdio.h>
+#include <R.h>
+#include <Rinternals.h>
+#include <Rdefines.h>
 #include <Rembedded.h>
 #include <R_ext/eventloop.h>
+#include <julia.h>
 
 extern void R_ProcessEvents();
 extern void RCall_registerRoutines();
@@ -12,7 +15,7 @@ int RCall_init()
 {
     if (R_is_initialized == 1)
     {
-        printf("R is running.\n");
+        jl_error("R is running.");
         return -1;
     }
     char *argv[] = {"RCall", "--slave"};
@@ -20,7 +23,7 @@ int RCall_init()
     int ret = Rf_initEmbeddedR(argc, argv);
     if (ret < 0)
     {
-      printf("R initialization failed.\n");
+      jl_error("R initialization failed.");
       return -1;
     }
     RCall_registerRoutines();

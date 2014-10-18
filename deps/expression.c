@@ -1,4 +1,5 @@
-#include <stdio.h>
+#include <R.h>
+#include <Rinternals.h>
 #include <Rdefines.h>
 #include <R_ext/Parse.h>
 #include <julia.h>
@@ -12,7 +13,7 @@ SEXP RCall_parse(SEXP cmd)
     if (status != PARSE_OK)
     {
         UNPROTECT(1);
-        jl_error("R parser error.\n");
+        jl_error("R parser error.");
         return R_NilValue;
     }
     UNPROTECT(1);

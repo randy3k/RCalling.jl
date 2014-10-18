@@ -1,5 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
+#include <R.h>
+#include <Rinternals.h>
 #include <Rdefines.h>
 
 int sexp_named(const SEXP sexp)
