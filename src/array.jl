@@ -1,8 +1,8 @@
 # general outer constructor
-RArray{T<:Real}(x::Range{T}) = jr_wrap(x)
-RArray{T<:Union(Real, ByteString), N}(x::Array{T, N}) = jr_wrap(x)
-RArray(x::Union(Real, ByteString)) = jr_wrap(x)
-RArray{T<:Union(Real, ByteString), N}(x::DataArray{T, N}) = jr_wrap(x)
+# RArray{T<:Real}(x::Range{T}) = jr_wrap(x)
+# RArray{T<:Union(Real, ByteString), N}(x::Array{T, N}) = jr_wrap(x)
+# RArray(x::Union(Real, ByteString)) = jr_wrap(x)
+# RArray{T<:Union(Real, ByteString), N}(x::DataArray{T, N}) = jr_wrap(x)
 
 typealias RVector{T} RArray{T, 1}
 typealias RMatrix{T} RArray{T, 2}

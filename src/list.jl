@@ -1,5 +1,5 @@
-RList(x::DataFrame) = jr_wrap(x)
-RList(x::Dict) = jr_wrap(x)
+# RList(x::DataFrame) = jr_wrap(x)
+# RList(x::Dict) = jr_wrap(x)
 
 # list getter
 
