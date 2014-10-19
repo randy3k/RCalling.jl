@@ -1,5 +1,6 @@
 #define R_NO_REMAP
 #include <stdbool.h>
+#include <stdlib.h>
 #include <R.h>
 #include <Rinternals.h>
 #include <julia.h>
@@ -54,21 +55,33 @@ static inline bool ISA(SEXP ss, const char *name)
 
 jl_value_t *rj_data_frame(SEXP ss)
 {
-    // TODO: check rownames
-    size_t n = LENGTH(ss);
     jl_value_t *ret = jl_nothing;
     if (TYPEOF(ss) == VECSXP)
     {
-        jl_array_t *columns = new_array(jl_any_type, jl_tuple1(jl_box_int64(n)));
+        SEXP rownames = PROTECT(Rf_getAttrib(ss, R_RowNamesSymbol));
+        int align = 0;
+        if (TYPEOF(rownames) == STRSXP)
+            align = 1;
+        size_t n = LENGTH(ss);
+        jl_array_t *columns = new_array(jl_any_type, jl_tuple1(jl_box_int64(n+align)));
         jl_array_t *names = sexp_names(ss);
-        jl_array_t *sym = new_array(jl_symbol_type, jl_tuple1(jl_box_int64(n)));
+        jl_array_t *sym = new_array(jl_symbol_type, jl_tuple1(jl_box_int64(n+align)));
         JL_GC_PUSH4(&columns, &names, &sym, &ret);
-        for (int i = 0; i < n; i++){
-            jl_arrayset(columns, rj_wrap(VECTOR_ELT(ss, i)), i);
-            jl_arrayset(sym, (jl_value_t *) jl_symbol(jl_string_data(jl_arrayref(names, i))), i);
+
+        if (align)
+        // if row names are not string
+        {
+            jl_arrayset(columns, rj_wrap(rownames), 0);
+            jl_arrayset(sym, (jl_value_t *) jl_symbol("RowID"), 0);
+        }
+        for (int i = 0; i < n; i++)
+        {
+            jl_arrayset(columns, rj_wrap(VECTOR_ELT(ss, i)), i+align);
+            jl_arrayset(sym, (jl_value_t *) jl_symbol(jl_string_data(jl_arrayref(names, i))), i+align);
         }
         jl_function_t *func = jl_get_function(jl_current_module, "DataFrame");
         ret = jl_call2(func, (jl_value_t *) columns, (jl_value_t *) sym);
+        UNPROTECT(1);
         JL_GC_POP();
     }
     return ret;
