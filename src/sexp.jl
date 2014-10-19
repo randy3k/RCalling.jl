@@ -158,22 +158,23 @@ end
 function Base.convert(::Type{RAny}, x)
     t = typeof(x)
     if t <: Array
-        return RArray(x)
+        return convert(RArray, x)
     elseif t <: Range
-        return RArray(x)
+        return convert(RArray, x)
     elseif t <: Real
-        return RArray(x)
+        return convert(RArray, x)
     elseif t <: ByteString
-        return RArray(x)
+        return convert(RArray, x)
     elseif t <: Function
-        return RFunction(x)
+        return convert(RFunction, x)
     elseif t <: DataArray
-        return RArray(x)
+        return convert(RArray, x)
     elseif t<: DataFrame
-        return RList(x)
+        return convert(RList, x)
     elseif t<: Dict
-        return RList(x)
+        return convert(RList, x)
     else
+        error("RCall does not know how to covert it.")
         return x
     end
 end
