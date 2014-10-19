@@ -8,7 +8,7 @@ function BaseEnv()
 end
 
 function Base.getindex(x::REnvironment, i::ASCIIString)
-    ptr = ccall(rsym(:sexp_listsubset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x.ptr, RArray(i).ptr)
+    ptr = ccall(rsym(:sexp_listsubset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x.ptr, convert(RArray, i).ptr)
     _factory(ptr)
 end
 
@@ -25,14 +25,14 @@ rget(x::ASCIIString) = rget(x, GlobalEnv())
 
 function rassign(name::ASCIIString, x::RAny, env::REnvironment)
     assign_fun = rget("assign", GlobalEnv())
-    rcall(assign_fun, Any[RArray(name), x, env], ["", "", "env"])
+    rcall(assign_fun, Any[convert(RArray, name), x, env], ["", "", "env"])
     nothing
 end
 rassign(name::ASCIIString, x::RAny) = rassign(name, x, GlobalEnv())
 
 function get_package(x::ASCIIString)
     as_environment = rget("as.environment", GlobalEnv())
-    rcall(as_environment, Any[RArray("package:$x")])
+    rcall(as_environment, Any[convert(RArray, "package:$x")])
 end
 
 # import

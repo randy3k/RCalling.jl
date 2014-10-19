@@ -1,5 +1,5 @@
 function parse(cmd::ByteString)
-    ret = ccall(rsym(:RCall_parse), Ptr{Void}, (Ptr{Void},), RArray(cmd).ptr)
+    ret = ccall(rsym(:RCall_parse), Ptr{Void}, (Ptr{Void},), convert(RArray, cmd).ptr)
     _factory(ret)
 end
 

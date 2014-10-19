@@ -11,7 +11,7 @@ typealias RVecOrMat{T} Union(RArray{T, 1}, RArray{T, 2})
 
 # int32, float64 getter
 
-Base.getindex{T<:Union(Float64, Int32), N}(x::RArray{T, N}, args...) = RArray(getindex(rj_wrap(x), args...))
+Base.getindex{T<:Union(Float64, Int32), N}(x::RArray{T, N}, args...) = convert(RArray, getindex(rj_wrap(x), args...))
 
 # int32, float64 setter
 
@@ -20,7 +20,7 @@ Base.setindex!{T<:Union(Float64, Int32), N}(x::RArray{T, N}, y::RArray, args...)
 
 # bool getter
 
-Base.getindex{N}(x::RArray{Bool, N}, args...) = RArray(getindex(rj_wrap(x), args...))
+Base.getindex{N}(x::RArray{Bool, N}, args...) = convert(RArray, getindex(rj_wrap(x), args...))
 
 # bool setter
 # since R bool vectors are 32bit, we have to treat them seperately
@@ -37,14 +37,14 @@ Base.setindex!{N}(x::RArray{Bool, N}, y::RArray{Bool, N}, args...) = Base.setind
 # string vector getter
 
 function Base.getindex{N}(x::RArray{UTF8String, N}, i)
-    ptr = ccall(rsym(:sexp_subset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x, RArray(i))
+    ptr = ccall(rsym(:sexp_subset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x, convert(RArray, i))
     _factory(ptr)
 end
 
 # string matrix getter
 
 function Base.getindex(x::RArray{UTF8String, 2}, i, j)
-    ptr = ccall(rsym(:sexp_subset2), Ptr{Void}, (Ptr{Void}, Ptr{Void}, Ptr{Void}), x, RArray(i), RArray(j))
+    ptr = ccall(rsym(:sexp_subset2), Ptr{Void}, (Ptr{Void}, Ptr{Void}, Ptr{Void}), x, convert(RArray, i), convert(RArray, j))
     _factory(ptr)
 end
 
@@ -73,9 +73,13 @@ Base.next(x::RArray, state) = x[state], state+1
 
 # TODO: vcat, hcat etc
 
-# converter
+# converter r to j
 
-Base.convert{T<:Union(Int32, Float64), N}(::Type{Array}, s::RArray{T,N}) = deepcopy(rj_wrap(s))
-Base.convert{N}(::Type{Array}, s::RArray{Bool,N}) = rj_wrap(s)
-Base.convert{T<:UTF8String, N}(::Type{Array}, s::RArray{T,N}) = rj_wrap(s)
-Base.convert(::Type{RArray}, s::Array) = jr_wrap(s)
+Base.convert{T<:Union(Bool, Int32, Float64), N}(::Type{Array}, x::RArray{T,N}) = deepcopy(rj_wrap(x))
+Base.convert{T<:ByteString, N}(::Type{Array}, x::RArray{T,N}) = rj_wrap(x)
+
+# convert j to r
+Base.convert{T<:Real, N}(::Type{RArray}, x::Array{T, N}) = jr_wrap(x)
+Base.convert{T<:ByteString, N}(::Type{RArray}, x::Array{T, N}) = jr_wrap(x)
+Base.convert(::Type{RArray}, x::Real) = jr_wrap(x)
+Base.convert(::Type{RArray}, x::ByteString) = jr_wrap(x)

@@ -4,7 +4,7 @@
 # list getter
 
 function Base.getindex(x::RList, i)
-    ptr = ccall(rsym(:sexp_listsubset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x.ptr, RArray(i).ptr)
+    ptr = ccall(rsym(:sexp_listsubset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x.ptr, convert(RArray, i).ptr)
     _factory(ptr)
 end
 
