@@ -12,7 +12,14 @@ R(cmd::ByteString, env::REnvironment) = eval(parse(cmd), env)
 R(cmd::ByteString) = eval(parse(cmd), GlobalEnv())
 
 macro R(cmd)
-    Expr(:call, :R, "$cmd")
+	if typeof(cmd) <: Expr && cmd.head == :(=)
+		rhs = cmd.args[2]
+		if typeof(rhs) <: Expr && rhs.head == :block
+			error("Use R(...) instead.")
+			return nothing
+		end
+	end
+    Expr(:call, :R, string(cmd))
 end
 
 macro Rpush(args...)
