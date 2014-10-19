@@ -1,28 +1,27 @@
 #include <R.h>
 #include <Rinternals.h>
-#include <Rdefines.h>
 
-int sexp_named(const SEXP sexp)
+int sexp_named(const SEXP s)
 {
-    int res = NAMED(sexp);
+    int res = NAMED(s);
     return res;
 }
 
-int sexp_typeof(const SEXP sexp)
+int sexp_typeof(const SEXP s)
 {
-    int res = TYPEOF(sexp);
+    int res = TYPEOF(s);
     return res;
 }
 
-int sexp_length(const SEXP sexp)
+int sexp_length(const SEXP s)
 {
-    int res = LENGTH(sexp);
+    int res = LENGTH(s);
     return res;
 }
 
-int sexp_ndims(const SEXP sexp)
+int sexp_ndims(const SEXP s)
 {
-    SEXP dims = GET_DIM(sexp);
+    SEXP dims = getAttrib(s, R_DimSymbol);
     int res;
     if (Rf_isNull(dims))
         res = 1;
@@ -31,9 +30,9 @@ int sexp_ndims(const SEXP sexp)
     return res;
 }
 
-SEXP sexp_size(const SEXP sexp)
+SEXP sexp_size(const SEXP s)
 {
-    SEXP dims = GET_DIM(sexp);
+    SEXP dims = getAttrib(s, R_DimSymbol);
     if (Rf_isNull(dims))
     {
         return NULL;
@@ -42,16 +41,16 @@ SEXP sexp_size(const SEXP sexp)
     return dims;
 }
 
-SEXP sexp_names(const SEXP sexp)
+SEXP sexp_names(const SEXP s)
 {
-    SEXP res = GET_NAMES(sexp);
+    SEXP res = getAttrib(s, R_NamesSymbol);
     R_PreserveObject(res);
     return res;
 }
 
-SEXP sexp_get_attr(const SEXP sexp, char *name)
+SEXP sexp_get_attr(const SEXP s, char *name)
 {
-    SEXP res = getAttrib(sexp, Rf_install(name));
+    SEXP res = getAttrib(s, Rf_install(name));
     if (Rf_isNull(res))
     {
         res = NULL;

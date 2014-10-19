@@ -1,6 +1,5 @@
 #include <R.h>
 #include <Rinternals.h>
-#include <Rdefines.h>
 #include <Rembedded.h>
 #include <R_ext/eventloop.h>
 #include <julia.h>

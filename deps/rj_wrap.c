@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <R.h>
 #include <Rinternals.h>
-#include <Rdefines.h>
 #include <julia.h>
 // some of the followings are adapted from https://github.com/armgong/RJulia/blob/master/src/R_Julia.c
 
@@ -50,7 +49,7 @@ static inline jl_array_t *rj_new_array(jl_datatype_t *type, jl_tuple_t *dims)
 
 static inline bool r_is_named(SEXP ss)
 {
-    SEXP name = GET_NAMES(ss);
+    SEXP name = getAttrib(ss, R_NamesSymbol);
     SEXP fun, v;
     if (name == R_NilValue) return 0;
     int errorOccurred;
@@ -121,7 +120,7 @@ jl_value_t *rj_wrap(SEXP ss)
                 jl_datatype_t *ttype = (jl_datatype_t *) jl_eval_string("(Any, Any)");
                 ret = (jl_value_t *) rj_new_array(ttype, jl_tuple1(jl_box_int64(length(ss))));
                 JL_GC_PUSH1(&ret);
-                SEXP name = GET_NAMES(ss);
+                SEXP name = getAttrib(ss, R_NamesSymbol);
                 if (r_is_named(ss))
                 {
                     for (int i = 0; i < length(ss); i++)

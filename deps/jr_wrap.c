@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <R.h>
 #include <Rinternals.h>
-#include <Rdefines.h>
 #include <julia.h>
 // mostly adapted from https://github.com/armgong/RJulia/blob/master/src/Julia_R.c
 
@@ -331,11 +330,11 @@ SEXP jr_data_frame(jl_value_t *tt)
     PROTECT(rnames = allocVector(STRSXP, m));
     for(size_t i=0; i<m; i++)
     {
-        SET_ELEMENT(ans, i, jr_data_array((jl_value_t *) jl_arrayref(columns, i)));
+        SET_VECTOR_ELT(ans, i, jr_data_array((jl_value_t *) jl_arrayref(columns, i)));
         SET_STRING_ELT(rnames, i, mkChar(((jl_sym_t *) jl_arrayref(names, i))->name));
     }
-    SET_NAMES(ans, rnames);
-    SET_CLASS(ans, mkString("data.frame"));
+    setAttrib(ans, R_NamesSymbol, rnames);
+    setAttrib(ans, R_ClassSymbol, mkString("data.frame"));
     d = PROTECT(allocVector(INTSXP ,n));
     for(size_t i=0; i<n; i++){
         INTEGER(d)[i] = i+1;
@@ -358,11 +357,11 @@ SEXP jr_dict(jl_value_t *tt)
     jl_value_t *key;
     for(size_t i=0; i<m; i++)
     {
-        SET_ELEMENT(ans, i, jr_wrap(jl_tupleref(jl_arrayref(ctt, i), 1), 0));
+        SET_VECTOR_ELT(ans, i, jr_wrap(jl_tupleref(jl_arrayref(ctt, i), 1), 0));
         key = jl_call1(str, jl_tupleref(jl_arrayref(ctt, i), 0));
         SET_STRING_ELT(rnames, i, mkChar(jl_string_data(key)));
     }
-    SET_NAMES(ans, rnames);
+    setAttrib(ans, R_NamesSymbol, rnames);
     UNPROTECT(2);
     return ans;
 }
@@ -393,7 +392,7 @@ SEXP jr_wrap(jl_value_t *tt, bool own){
     {
         PROTECT(ans = allocVector(VECSXP, jl_tuple_len(tt)));
         for (int i = 0; i < jl_tuple_len(tt); i++)
-            SET_ELEMENT(ans, i, jr_wrap(jl_tupleref(tt, i), 0));
+            SET_VECTOR_ELT(ans, i, jr_wrap(jl_tupleref(tt, i), 0));
         UNPROTECT(1);
     }
     else if(jl_isa(tt, "Dict"))

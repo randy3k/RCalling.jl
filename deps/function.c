@@ -1,6 +1,5 @@
 #include <R.h>
 #include <Rinternals.h>
-#include <Rdefines.h>
 #include <R_ext/Parse.h>
 
 SEXP sexp_eval_promise(const SEXP s)
