@@ -1,5 +1,8 @@
 #include <R.h>
 #include <Rinternals.h>
+#include <julia.h>
+
+extern jl_value_t *rj_wrap(SEXP ss);
 
 int sexp_named(const SEXP s)
 {
@@ -30,22 +33,39 @@ int sexp_ndims(const SEXP s)
     return res;
 }
 
-SEXP sexp_size(const SEXP s)
+jl_tuple_t *sexp_size(const SEXP s)
 {
+    jl_tuple_t *d;
     SEXP dims = getAttrib(s, R_DimSymbol);
-    if (Rf_isNull(dims))
+
+    if (dims != R_NilValue)
     {
-        return NULL;
+        //array or matrix
+        int ndims = LENGTH(dims);
+        d = jl_alloc_tuple(ndims);
+        JL_GC_PUSH1(&d);
+        size_t i;
+        for (i = 0; i < ndims; i++)
+        {
+            jl_tupleset(d, i, jl_box_long(INTEGER(dims)[i]));
+        }
+        JL_GC_POP();
     }
-    R_PreserveObject(dims);
-    return dims;
+    else
+    {
+        //list
+        d = jl_alloc_tuple(1);
+        JL_GC_PUSH1(&d);
+        jl_tupleset(d, 0, jl_box_long(LENGTH(s)));
+        JL_GC_POP();
+    }
+    return d;
 }
 
-SEXP sexp_names(const SEXP s)
+jl_value_t *sexp_names(const SEXP s)
 {
     SEXP res = getAttrib(s, R_NamesSymbol);
-    R_PreserveObject(res);
-    return res;
+    return rj_wrap(res);
 }
 
 SEXP sexp_get_attr(const SEXP s, char *name)
@@ -58,15 +78,6 @@ SEXP sexp_get_attr(const SEXP s, char *name)
         R_PreserveObject(res);
     }
     return res;
-}
-
-void sexp_print(const SEXP s)
-{
-    int errorOccurred;
-    SEXP fun;
-    fun = PROTECT(Rf_findFun(Rf_install("print"),  R_GlobalEnv));
-    R_tryEval(Rf_lang2(fun, s), R_GlobalEnv, &errorOccurred);
-    UNPROTECT(1);
 }
 
 // one argument subset
@@ -105,7 +116,7 @@ SEXP sexp_listsubset(const SEXP s, const SEXP i)
     return ret;
 }
 
-void * sexp_pointer(const SEXP x)
+void *sexp_pointer(const SEXP x)
 {
     void *p;
     switch (TYPEOF(x))
@@ -123,4 +134,13 @@ void * sexp_pointer(const SEXP x)
             p = 0;
     }
     return p;
+}
+
+void sexp_print(const SEXP s)
+{
+    int errorOccurred;
+    SEXP fun;
+    fun = PROTECT(Rf_findFun(Rf_install("print"),  R_GlobalEnv));
+    R_tryEval(Rf_lang2(fun, s), R_GlobalEnv, &errorOccurred);
+    UNPROTECT(1);
 }

@@ -49,22 +49,17 @@ end
 
 function Base.size(s::RAny)
     ret = ccall(rsym(:sexp_size), Ptr{Void}, (Ptr{Void},), s.ptr)
-    obj = _factory(ret)
-    if obj == None
-        return (1,)
-    else
-        return tuple(int64(deepcopy(rj_wrap(obj)))...)
-    end
+    unsafe_pointer_to_objref(ret)
 end
 
 function Base.size(s::RAny, i::Int64)
     ret = ccall(rsym(:sexp_size), Ptr{Void}, (Ptr{Void},), s.ptr)
-    rj_wrap(_factory(ret))[i]
+    unsafe_pointer_to_objref(ret)[i]
 end
 
 function Base.names(s::RAny)
     ret = ccall(rsym(:sexp_names), Ptr{Void}, (Ptr{Void},), s.ptr)
-    Base.convert(Array, _factory(ret))
+    unsafe_pointer_to_objref(ret)
 end
 
 function named(s::RAny)

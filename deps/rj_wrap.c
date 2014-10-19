@@ -9,33 +9,7 @@
 #define IS_ASCII(x) (ENVFLAGS(x) & ASCII_MASK)
 #define IS_UTF8(x) (ENVFLAGS(x) & UTF8_MASK)
 
-static inline jl_tuple_t *rj_dim(SEXP ss)
-{
-    jl_tuple_t *d;
-    SEXP dims = getAttrib(ss, R_DimSymbol);
-    //array or matrix
-    if (dims != R_NilValue)
-    {
-        int ndims = LENGTH(dims);
-        d = jl_alloc_tuple(ndims);
-        JL_GC_PUSH1(&d);
-        size_t i;
-        for (i = 0; i < ndims; i++)
-        {
-            jl_tupleset(d, i, jl_box_long(INTEGER(dims)[i]));
-        }
-        JL_GC_POP();
-    }
-    else
-    //vector
-    {
-        d = jl_alloc_tuple(1);
-        JL_GC_PUSH1(&d);
-        jl_tupleset(d, 0, jl_box_long(LENGTH(ss)));
-        JL_GC_POP();
-    }
-    return d;
-}
+extern jl_tuple_t *sexp_size(const SEXP s);
 
 static inline jl_array_t *rj_array(jl_datatype_t *type, void* data, jl_tuple_t *dims)
 {
@@ -80,7 +54,7 @@ jl_value_t *rj_wrap(SEXP ss)
     jl_value_t *ret = jl_nothing;
     if ((LENGTH(ss)) != 0)
     {
-        jl_tuple_t *dims = rj_dim(ss);
+        jl_tuple_t *dims = sexp_size(ss);
         switch (TYPEOF(ss))
         {
             case LGLSXP:
