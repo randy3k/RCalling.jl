@@ -75,16 +75,7 @@ Base.next(x::RArray, state) = x[state], state+1
 
 # converter
 
-function Base.convert{T<:Union(Int32, Float64), N}(::Type{Array}, s::RArray{T,N})
-    deepcopy(rj_wrap(s))
-end
-
-function Base.convert{N}(::Type{Array}, s::RArray{Bool,N})
-    rj_wrap(s)
-end
-
-function Base.convert{T<:UTF8String, N}(::Type{Array}, s::RArray{T,N})
-    rj_wrap(s)
-end
-
-Base.convert(::Type{RArray}, s::Array) = RArray(s)
+Base.convert{T<:Union(Int32, Float64), N}(::Type{Array}, s::RArray{T,N}) = deepcopy(rj_wrap(s))
+Base.convert{N}(::Type{Array}, s::RArray{Bool,N}) = rj_wrap(s)
+Base.convert{T<:UTF8String, N}(::Type{Array}, s::RArray{T,N}) = rj_wrap(s)
+Base.convert(::Type{RArray}, s::Array) = jr_wrap(s)

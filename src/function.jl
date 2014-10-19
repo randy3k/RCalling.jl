@@ -1,3 +1,6 @@
+# outer constructor
+RFunction(f::Function) = Base.convert(RFunction, f)
+
 function rcall(f::RFunction, argv::Vector, argn::Vector{ASCIIString}, env::REnvironment)
     n::Int32 = length(argv)
     argv_p = map((x)->x.ptr, argv)
@@ -26,16 +29,9 @@ function Base.convert(::Type{Function}, f::RFunction)
             [typeof(a) <: RAny ? a : convert(RAny, a) for a in argv_named])
 
         ret = rcall(f, argv, vcat(argn_unnamed, argn_named))
-        # if typeof(ret) <: Union(RArray{Int32}, RArray{Float64}, RArray{Bool}, RArray{UTF8String}, RArray{ASCIIString})
-        #     ret = convert(Array, ret)
-        # end
         return ret
     end
 end
-
-# outer constructor
-
-RFunction(f::Function) = Base.convert(RFunction, f)
 
 # convert
 

@@ -117,6 +117,7 @@ jl_value_t *rj_wrap(SEXP ss)
             case VECSXP:
             {
                 // TODO: if data.frame, directly convert to DataFrame
+                // and apply rownames
                 jl_datatype_t *ttype = (jl_datatype_t *) jl_eval_string("(Any, Any)");
                 ret = (jl_value_t *) rj_new_array(ttype, jl_tuple1(jl_box_int64(length(ss))));
                 JL_GC_PUSH1(&ret);
