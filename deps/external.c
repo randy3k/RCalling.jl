@@ -8,7 +8,7 @@
 extern SEXP jr_wrap(jl_value_t *tt, int preserve);
 extern jl_value_t *rj_wrap(SEXP ss);
 
-SEXP do_julia(SEXP args)
+static SEXP do_julia(SEXP args)
 {
     SEXP v;
 

@@ -75,7 +75,9 @@ SEXP jr_func_wrap(void* p)
 {
     ParseStatus status;
     SEXP s, t, ext;
-    s = t = PROTECT(R_ParseVector(Rf_mkString("function(...) {.External(\".RCall\", NULL, ...)}"), -1, &status, R_NilValue));
+    s = t = PROTECT(R_ParseVector(
+        Rf_mkString("function(...) {.External(\".RCall\", NULL, ...)}"),
+        -1, &status, R_NilValue));
     ext = PROTECT(R_MakeExternalPtr(p, R_NilValue, R_NilValue));
     SETCADDR(CADR(CADDR(VECTOR_ELT(t ,0))), ext);
     int errorOccurred = 0;
