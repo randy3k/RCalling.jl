@@ -5,6 +5,7 @@ import DataFrames: DataArray, DataFrame
 # R objects
 export RAny, RArray, RList, RFunction, REnvironment, RExpression, RFunctionCall, RObject, RNull
 export RVector, RMatrix
+export DataFrame, DataArray
 # R object function
 export class, attr
 # ipython graphics helper

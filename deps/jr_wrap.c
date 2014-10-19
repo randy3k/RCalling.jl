@@ -10,7 +10,7 @@ SEXP jr_wrap(jl_value_t *tt, bool own);
 
 static inline bool jl_isa(jl_value_t* tt, char* type)
 {
-    jl_value_t* atype = jl_get_global(jl_main_module, jl_symbol(type));
+    jl_value_t* atype = jl_get_global(jl_current_module, jl_symbol(type));
     if ((atype == NULL) || (! jl_is_datatype(atype)))
         return 0;
     return jl_subtype(tt, atype, 1);
