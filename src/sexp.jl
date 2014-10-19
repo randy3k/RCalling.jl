@@ -2,7 +2,7 @@
 abstract RAny
 
 # R objects
-for t in (:(RArray{T, N}), :RDict, :RFunction, :REnvironment, :RExpression, :RFunctionCall, :RObject, :RNull)
+for t in (:(RArray{T, N}), :RList, :RFunction, :REnvironment, :RExpression, :RFunctionCall, :RObject, :RNull)
     @eval begin
         type $t <: RAny
             ptr::Ptr{Void}
@@ -122,8 +122,7 @@ const SexpType_to_JType = Dict([
     (LGLSXP, Bool),
     (INTSXP, Int32),
     (REALSXP, Float64),
-    (STRSXP, UTF8String),
-    (VECSXP, RAny)
+    (STRSXP, UTF8String)
 ])
 
 function release_object(s::RAny)
@@ -141,7 +140,7 @@ function _factory(ptr::Ptr{Void}, own::Bool=true)
         T = SexpType_to_JType[t]
         obj = RArray{T, N}(ptr)
     elseif t == VECSXP
-        obj = RDict(ptr)
+        obj = RList(ptr)
     elseif t in (CLOSXP, BUILTINSXP, SPECIALSXP)
         obj = RFunction(ptr)
     elseif t == ENVSXP
@@ -176,9 +175,9 @@ function Base.convert(::Type{RAny}, x)
     elseif t <: DataArray
         return RArray(x)
     elseif t<: DataFrame
-        return RDict(x)
+        return RList(x)
     elseif t<: Dict
-        return RDict(x)
+        return RList(x)
     else
         return x
     end

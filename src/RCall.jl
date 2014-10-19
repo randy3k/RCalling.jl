@@ -3,7 +3,7 @@ module RCall
 import DataFrames: DataArray, DataFrame
 
 # R objects
-export RAny, RArray, RDict, RFunction, REnvironment, RExpression, RFunctionCall, RObject, RNull
+export RAny, RArray, RList, RFunction, REnvironment, RExpression, RFunctionCall, RObject, RNull
 export RVector, RMatrix
 # R object function
 export class, attr
@@ -24,25 +24,19 @@ include("init.jl")
 init()
 gui()
 
-# sexp type definitions
 include("sexp.jl")
 
-# environment
 include("environment.jl")
 
 # parse, eval, expression
 include("expression.jl")
 
-# vector and matrix
 include("array.jl")
 
-# list
-include("dict.jl")
+include("list.jl")
 
-# function type
 include("function.jl")
 
-# function type
 include("operator.jl")
 
 # ipython graphics
