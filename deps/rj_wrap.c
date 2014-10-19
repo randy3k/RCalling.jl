@@ -43,9 +43,30 @@ static inline jl_array_t *rj_array(jl_datatype_t *type, void* data, jl_tuple_t *
   return jl_ptr_to_array(jl_apply_array_type(type, jl_tuple_len(dims)), data, dims, 0);
 }
 
-static jl_array_t *rj_new_array(jl_datatype_t *type, jl_tuple_t *dims)
+static inline jl_array_t *rj_new_array(jl_datatype_t *type, jl_tuple_t *dims)
 {
   return jl_new_array(jl_apply_array_type(type, jl_tuple_len(dims)), dims);
+}
+
+static inline bool r_is_named(SEXP ss)
+{
+    SEXP name = GET_NAMES(ss);
+    SEXP fun, v;
+    if (name == R_NilValue) return 0;
+    int errorOccurred;
+    fun = PROTECT(Rf_findFun(Rf_install("nchar"),  R_GlobalEnv));
+    v = R_tryEval(Rf_lang2(fun, name), R_GlobalEnv, &errorOccurred);
+    UNPROTECT(1);
+    if (v == R_NilValue) return 0;
+    for(int i=0; i<LENGTH(v); i++)
+    {
+        if (INTEGER(v)[i]==0)
+        {
+            return 0;
+            break;
+        }
+    }
+    return 1;
 }
 
 jl_value_t *rj_wrap(SEXP ss)
@@ -96,15 +117,27 @@ jl_value_t *rj_wrap(SEXP ss)
             }
             case VECSXP:
             {
-                SEXP name = GET_NAMES(ss);
+                // TODO: if data.frame, directly convert to DataFrame
                 jl_datatype_t *ttype = (jl_datatype_t *) jl_eval_string("(Any, Any)");
                 ret = (jl_value_t *) rj_new_array(ttype, jl_tuple1(jl_box_int64(length(ss))));
                 JL_GC_PUSH1(&ret);
-                for (int i = 0; i < length(ss); i++)
+                SEXP name = GET_NAMES(ss);
+                if (r_is_named(ss))
                 {
-                    jl_arrayset((jl_array_t *) ret,
-                        (jl_value_t *) jl_tuple2(jl_cstr_to_string(CHAR(STRING_ELT(name, i))),
-                                            rj_wrap(VECTOR_ELT(ss, i))), i);
+                    for (int i = 0; i < length(ss); i++)
+                    {
+                        jl_arrayset((jl_array_t *) ret,
+                            (jl_value_t *) jl_tuple2(jl_cstr_to_string(CHAR(STRING_ELT(name, i))),
+                                                rj_wrap(VECTOR_ELT(ss, i))), i);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < length(ss); i++)
+                    {
+                        jl_arrayset((jl_array_t *) ret,
+                            (jl_value_t *) jl_tuple2(jl_box_int64(i+1), rj_wrap(VECTOR_ELT(ss, i))), i);
+                    }
                 }
                 jl_function_t *func = jl_get_function(jl_base_module, "Dict");
                 ret = jl_call1(func, ret);
