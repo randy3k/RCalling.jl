@@ -41,7 +41,7 @@ const julia_reserved = Set{ASCIIString}((
     "macro", "quote", "let", "local", "global", "const", "abstract",
     "typealias", "type", "bitstype", "immutable", "ccall", "do", "module",
     "baremodule", "using", "import", "export", "importall", "false", "true",
-    "rget")
+    "__rget__", "__package__")
 )
 
 function rlibrary_wrap(x::ASCIIString, s::Symbol)
@@ -57,8 +57,9 @@ function rlibrary_wrap(x::ASCIIString, s::Symbol)
     filter!(m -> !(m[1] in julia_reserved), members)
     m = Module(s)
     consts = [Expr(:const, Expr(:(=), symbol(x[1]), x[2])) for x in members]
+    identity = Expr(:(=), :__package__, x)
     exports = [symbol(x[1]) for x in members]
-    eval(m, Expr(:toplevel, consts..., :(rget(s) = getindex($(pkg), s)), Expr(:export, exports...)))
+    eval(m, Expr(:toplevel, consts..., :(__rget__(s) = getindex($(pkg), s)), Expr(:export, exports...), identity))
     m
 end
 
@@ -76,10 +77,10 @@ macro rimport(x, args...)
         if !isdefined($symbol)
             const $(esc(m)) = rlibrary_wrap($pkgname, $symbol)
             nothing
-        elseif typeof($(esc(m))) <: Module && :rget in names($(esc(m)), true)
+        elseif typeof($(esc(m))) <: Module && :__package__ in names($(esc(m)), true) && $(esc(m)).__package__ == $pkgname
             nothing
         else
-            error("$($pkgname) already exists!")
+            error("$($symbol) already exists!")
             nothing
         end
     end
