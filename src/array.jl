@@ -58,11 +58,9 @@ end
 
 Base.summary(a::RArray) = string(Base.dims2string(size(a)), " ", typeof(a))
 
-# TODO: print NA
 function Base.show{T, N}(io::IO, x::RArray{T, N})
     println(io, summary(x))
-    rprint(x)
-    # Base.showarray(io, rj_wrap(x), header=false)
+    rprint(io, x)
     nothing
 end
 

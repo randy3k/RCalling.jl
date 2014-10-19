@@ -22,7 +22,7 @@ function Base.show(io::IO, s::RList)
     end
     try
         c = join(class(s), " ")
-        print(io, typeof(s), "<$c>")
+        print(io, typeof(s), "{$c}")
     catch
         print(io, typeof(s))
     end
