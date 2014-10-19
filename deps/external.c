@@ -1,3 +1,4 @@
+#define R_NO_REMAP
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
@@ -43,20 +44,4 @@ void RCall_registerRoutines()
         {NULL, NULL, 0}
     };
     R_registerRoutines(R_getEmbeddingDllInfo(), NULL, NULL, NULL, externalMethods);
-}
-
-
-SEXP jr_func_wrap(void* p)
-{
-    ParseStatus status;
-    SEXP s, t, ext;
-    s = t = PROTECT(R_ParseVector(mkString("function(...) {.External(\".RCall\", NULL, ...)}"), -1, &status, R_NilValue));
-    ext = PROTECT(R_MakeExternalPtr(p, R_NilValue, R_NilValue));
-    SETCADDR(CADR(CADDR(VECTOR_ELT(t ,0))), ext);
-    int errorOccurred = 0;
-    SEXP ret;
-    ret = PROTECT(R_tryEval(VECTOR_ELT(s,0), R_GlobalEnv, &errorOccurred));
-    R_PreserveObject(ret);
-    UNPROTECT(3);
-    return ret;
 }

@@ -1,3 +1,4 @@
+#define R_NO_REMAP
 #include <R.h>
 #include <Rinternals.h>
 #include <julia.h>
@@ -24,7 +25,7 @@ int sexp_length(const SEXP s)
 
 int sexp_ndims(const SEXP s)
 {
-    SEXP dims = getAttrib(s, R_DimSymbol);
+    SEXP dims = Rf_getAttrib(s, R_DimSymbol);
     int res;
     if (Rf_isNull(dims))
         res = 1;
@@ -36,7 +37,7 @@ int sexp_ndims(const SEXP s)
 jl_tuple_t *sexp_size(const SEXP s)
 {
     jl_tuple_t *d;
-    SEXP dims = getAttrib(s, R_DimSymbol);
+    SEXP dims = Rf_getAttrib(s, R_DimSymbol);
 
     if (dims != R_NilValue)
     {
@@ -64,13 +65,13 @@ jl_tuple_t *sexp_size(const SEXP s)
 
 jl_array_t *sexp_names(const SEXP s)
 {
-    SEXP res = getAttrib(s, R_NamesSymbol);
+    SEXP res = Rf_getAttrib(s, R_NamesSymbol);
     return (jl_array_t *) rj_wrap(res);
 }
 
 SEXP sexp_get_attr(const SEXP s, char *name)
 {
-    SEXP res = getAttrib(s, Rf_install(name));
+    SEXP res = Rf_getAttrib(s, Rf_install(name));
     if (Rf_isNull(res))
     {
         res = NULL;

@@ -1,3 +1,4 @@
+#define R_NO_REMAP
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Parse.h>
@@ -11,7 +12,7 @@ SEXP sexp_eval_promise(const SEXP s)
         UNPROTECT(1);
         PROTECT(env = R_GlobalEnv);
     }
-    PROTECT(t = eval(s, env));
+    PROTECT(t = Rf_eval(s, env));
     // R_PreserveObject(t);
     UNPROTECT(2);
     return t;
@@ -23,7 +24,7 @@ SEXP RCall_call(SEXP fun_R, SEXP *argv, int argc, char **argn, SEXP env)
     // make call
     int count = 0;
     SEXP s, t;
-    PROTECT(s = t = allocVector(LANGSXP, argc+1));
+    PROTECT(s = t = Rf_allocVector(LANGSXP, argc+1));
     count++;
     SETCAR(t, fun_R);
     t = CDR(t);
@@ -35,7 +36,7 @@ SEXP RCall_call(SEXP fun_R, SEXP *argv, int argc, char **argn, SEXP env)
         SETCAR(t, argv[arg_i]);
         arg_name = argn[arg_i];
         if (strlen(arg_name) > 0) {
-            SET_TAG(t, install(arg_name));
+            SET_TAG(t, Rf_install(arg_name));
         }
         t = CDR(t);
     }
@@ -68,4 +69,19 @@ SEXP RCall_call(SEXP fun_R, SEXP *argv, int argc, char **argn, SEXP env)
     }
     UNPROTECT(count);
     return res_ok;
+}
+
+SEXP jr_func_wrap(void* p)
+{
+    ParseStatus status;
+    SEXP s, t, ext;
+    s = t = PROTECT(R_ParseVector(Rf_mkString("function(...) {.External(\".RCall\", NULL, ...)}"), -1, &status, R_NilValue));
+    ext = PROTECT(R_MakeExternalPtr(p, R_NilValue, R_NilValue));
+    SETCADDR(CADR(CADDR(VECTOR_ELT(t ,0))), ext);
+    int errorOccurred = 0;
+    SEXP ret;
+    ret = PROTECT(R_tryEval(VECTOR_ELT(s,0), R_GlobalEnv, &errorOccurred));
+    R_PreserveObject(ret);
+    UNPROTECT(3);
+    return ret;
 }

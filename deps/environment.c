@@ -1,3 +1,4 @@
+#define R_NO_REMAP
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Parse.h>
@@ -17,7 +18,7 @@ SEXP RCall_BaseEnv()
 SEXP RCall_findVar(char *v, SEXP env)
 {
     SEXP fun;
-    fun = PROTECT(findVar(Rf_install(v), env));
+    fun = PROTECT(Rf_findVar(Rf_install(v), env));
     if (fun == R_UnboundValue)
     {
         UNPROTECT(1);

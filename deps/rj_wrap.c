@@ -1,3 +1,4 @@
+#define R_NO_REMAP
 #include <stdbool.h>
 #include <R.h>
 #include <Rinternals.h>
@@ -25,7 +26,7 @@ static inline jl_array_t *new_array(jl_datatype_t *type, jl_tuple_t *dims)
 
 static inline bool IS_NAMED(SEXP ss)
 {
-    SEXP name = getAttrib(ss, R_NamesSymbol);
+    SEXP name = Rf_getAttrib(ss, R_NamesSymbol);
     SEXP fun, v;
     if (name == R_NilValue) return 0;
     int errorOccurred;
@@ -45,7 +46,7 @@ static inline bool IS_NAMED(SEXP ss)
 
 static inline bool ISA(SEXP ss, const char *name)
 {
-    SEXP cls = getAttrib(ss, R_ClassSymbol);
+    SEXP cls = Rf_getAttrib(ss, R_ClassSymbol);
     if (cls == R_NilValue) return 0;
     if (strcmp(CHAR(STRING_ELT(cls, 0)), name)==0) return 1;
     return 0;
@@ -143,7 +144,7 @@ jl_value_t *rj_wrap(SEXP ss)
                 jl_value_t **data = jl_array_data(ret);
                 for (size_t i = 0; i < jl_array_len(ret); i++)
                     if (!IS_ASCII(ss))
-                        data[i] = jl_cstr_to_string(translateChar0(STRING_ELT(ss, i)));
+                        data[i] = jl_cstr_to_string(Rf_translateChar0(STRING_ELT(ss, i)));
                     else
                         data[i] = jl_cstr_to_string(CHAR(STRING_ELT(ss, i)));
                 JL_GC_POP();

@@ -1,3 +1,4 @@
+#define R_NO_REMAP
 #include <stdbool.h>
 #include <R.h>
 #include <Rinternals.h>
@@ -23,80 +24,80 @@ SEXP jr_scalar(jl_value_t *tt)
     // float64, int64, int32 are most common, so put them in the front
     if (jl_is_float64(tt))
     {
-        PROTECT(ans = ScalarReal(jl_unbox_float64(tt)));
+        PROTECT(ans = Rf_ScalarReal(jl_unbox_float64(tt)));
         UNPROTECT(1);
     }
     else if (jl_is_int32(tt))
     {
-        PROTECT(ans = ScalarInteger(jl_unbox_int32(tt)));
+        PROTECT(ans = Rf_ScalarInteger(jl_unbox_int32(tt)));
         UNPROTECT(1);
     }
     else if (jl_is_int64(tt))
     {
         tmpfloat=(double)jl_unbox_int64(tt);
         if (in_int32_range(tmpfloat))
-            PROTECT(ans = ScalarInteger((int32_t)jl_unbox_int64(tt)));
+            PROTECT(ans = Rf_ScalarInteger((int32_t)jl_unbox_int64(tt)));
         else
-            PROTECT(ans = ScalarReal(tmpfloat));
+            PROTECT(ans = Rf_ScalarReal(tmpfloat));
         UNPROTECT(1);
     }
     else if (jl_is_bool(tt))
     {
-        PROTECT(ans = ScalarLogical(jl_unbox_bool(tt)));
+        PROTECT(ans = Rf_ScalarLogical(jl_unbox_bool(tt)));
         UNPROTECT(1);
     }
     else if (jl_is_int8(tt))
     {
-        PROTECT(ans = ScalarInteger(jl_unbox_int8(tt)));
+        PROTECT(ans = Rf_ScalarInteger(jl_unbox_int8(tt)));
         UNPROTECT(1);
     }
     else if (jl_is_uint8(tt))
     {
-        PROTECT(ans = ScalarInteger(jl_unbox_uint8(tt)));
+        PROTECT(ans = Rf_ScalarInteger(jl_unbox_uint8(tt)));
         UNPROTECT(1);
     }
     else if (jl_is_int16(tt))
     {
-        PROTECT(ans = ScalarInteger(jl_unbox_int16(tt)));
+        PROTECT(ans = Rf_ScalarInteger(jl_unbox_int16(tt)));
         UNPROTECT(1);
     }
     else if (jl_is_uint16(tt))
     {
-        PROTECT(ans = ScalarInteger(jl_unbox_uint16(tt)));
+        PROTECT(ans = Rf_ScalarInteger(jl_unbox_uint16(tt)));
         UNPROTECT(1);
     }
     else if (jl_is_uint32(tt))
     {
         tmpfloat=(double)jl_unbox_uint32(tt);
         if (in_int32_range(tmpfloat))
-            PROTECT(ans = ScalarInteger((int32_t)jl_unbox_uint32(tt)));
+            PROTECT(ans = Rf_ScalarInteger((int32_t)jl_unbox_uint32(tt)));
         else
-            PROTECT(ans = ScalarReal(tmpfloat));
+            PROTECT(ans = Rf_ScalarReal(tmpfloat));
         UNPROTECT(1);
     }
     else if (jl_is_uint64(tt))
     {
         tmpfloat=(double)jl_unbox_int64(tt);
         if (in_int32_range(tmpfloat))
-            PROTECT(ans = ScalarInteger((int32_t)jl_unbox_uint64(tt)));
+            PROTECT(ans = Rf_ScalarInteger((int32_t)jl_unbox_uint64(tt)));
         else
-            PROTECT(ans = ScalarReal(tmpfloat));
+            PROTECT(ans = Rf_ScalarReal(tmpfloat));
         UNPROTECT(1);
     }
     else if (jl_is_float32(tt))
     {
-        PROTECT(ans = ScalarReal(jl_unbox_float32(tt)));
+        PROTECT(ans = Rf_ScalarReal(jl_unbox_float32(tt)));
         UNPROTECT(1);
     }
     else if (jl_is_utf8_string(tt))
     {
-        PROTECT(ans = allocVector(STRSXP, 1));
-        SET_STRING_ELT(ans, 0, mkCharCE(jl_string_data(tt), CE_UTF8));
+        PROTECT(ans = Rf_allocVector(STRSXP, 1));
+        SET_STRING_ELT(ans, 0, Rf_mkCharCE(jl_string_data(tt), CE_UTF8));
         UNPROTECT(1);
     }
     else if (jl_is_ascii_string(tt))
     {
-        PROTECT(ans = ScalarString(mkChar(jl_string_data(tt))));
+        PROTECT(ans = Rf_ScalarString(Rf_mkChar(jl_string_data(tt))));
         UNPROTECT(1);
     }
     return ans;
@@ -117,7 +118,7 @@ SEXP jr_array(jl_value_t *tt)
 
     int ndims = jl_array_ndims(tt);
     SEXP dims;
-    PROTECT(dims = allocVector(INTSXP, ndims));
+    PROTECT(dims = Rf_allocVector(INTSXP, ndims));
     for (size_t i = 0; i < ndims; i++)
     {
         INTEGER(dims)[i] = jl_array_dim(tt, i);
@@ -128,14 +129,14 @@ SEXP jr_array(jl_value_t *tt)
     if (jl_is_float64(val))
     {
             double *p = (double *) jl_array_data(tt);
-            PROTECT(ans = allocArray(REALSXP, dims));
+            PROTECT(ans = Rf_allocArray(REALSXP, dims));
             for (size_t i = 0; i < len; i++) REAL(ans)[i] = p[i];
             UNPROTECT(1);;
     }
     else if (jl_is_int32(val))
     {
          int32_t *p = (int32_t *) jl_array_data(tt);
-         PROTECT(ans = allocArray(INTSXP, dims));\
+         PROTECT(ans = Rf_allocArray(INTSXP, dims));\
          for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
          UNPROTECT(1);
     }
@@ -153,13 +154,13 @@ SEXP jr_array(jl_value_t *tt)
         }
         if (is_int32)
         {
-            PROTECT(ans = allocArray(INTSXP, dims));
+            PROTECT(ans = Rf_allocArray(INTSXP, dims));
             for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
             UNPROTECT(1);
         }
         else
         {
-            PROTECT(ans = allocArray(REALSXP, dims));
+            PROTECT(ans = Rf_allocArray(REALSXP, dims));
             for (size_t i = 0; i < len; i++) REAL(ans)[i] = p[i];
             UNPROTECT(1);
         }
@@ -167,7 +168,7 @@ SEXP jr_array(jl_value_t *tt)
     else if (jl_is_bool(val))
     {
         bool *p = (bool *) jl_array_data(tt);
-        PROTECT(ans = allocArray(LGLSXP, dims));
+        PROTECT(ans = Rf_allocArray(LGLSXP, dims));
         for (size_t i = 0; i < len; i++)
            LOGICAL(ans)[i] = p[i];
         UNPROTECT(1);
@@ -175,28 +176,28 @@ SEXP jr_array(jl_value_t *tt)
     else if (jl_is_int8(val))
     {
         int8_t *p = (int8_t *) jl_array_data(tt);
-        PROTECT(ans = allocArray(INTSXP, dims));\
+        PROTECT(ans = Rf_allocArray(INTSXP, dims));\
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
     else if (jl_is_uint8(val))
     {
         uint8_t *p = (uint8_t *) jl_array_data(tt);
-        PROTECT(ans = allocArray(INTSXP, dims));\
+        PROTECT(ans = Rf_allocArray(INTSXP, dims));\
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
     else if (jl_is_int16(val))
     {
         int16_t *p = (int16_t *) jl_array_data(tt);
-        PROTECT(ans = allocArray(INTSXP, dims));\
+        PROTECT(ans = Rf_allocArray(INTSXP, dims));\
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
     else if (jl_is_uint16(val))
     {
         uint16_t *p = (uint16_t *) jl_array_data(tt);
-        PROTECT(ans = allocArray(INTSXP, dims));\
+        PROTECT(ans = Rf_allocArray(INTSXP, dims));\
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
@@ -214,13 +215,13 @@ SEXP jr_array(jl_value_t *tt)
         }
         if (is_int32)
         {
-            PROTECT(ans = allocArray(INTSXP, dims));
+            PROTECT(ans = Rf_allocArray(INTSXP, dims));
             for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
             UNPROTECT(1);
         }
         else
         {
-            PROTECT(ans = allocArray(REALSXP, dims));
+            PROTECT(ans = Rf_allocArray(REALSXP, dims));
             for (size_t i = 0; i < len; i++) REAL(ans)[i] = p[i];
             UNPROTECT(1);
         }
@@ -239,13 +240,13 @@ SEXP jr_array(jl_value_t *tt)
         }
         if (is_int32)
         {
-            PROTECT(ans = allocArray(INTSXP, dims));
+            PROTECT(ans = Rf_allocArray(INTSXP, dims));
             for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
             UNPROTECT(1);
         }
         else
         {
-          PROTECT(ans = allocArray(REALSXP, dims));
+          PROTECT(ans = Rf_allocArray(REALSXP, dims));
           for (size_t i = 0; i < len; i++) REAL(ans)[i] = p[i];
           UNPROTECT(1);
         }
@@ -254,23 +255,23 @@ SEXP jr_array(jl_value_t *tt)
     else if (jl_is_float32(val))
     {
         float *p = (float *) jl_array_data(tt);
-        PROTECT(ans = allocArray(REALSXP, dims));
+        PROTECT(ans = Rf_allocArray(REALSXP, dims));
         for (size_t i = 0; i < len; i++) REAL(ans)[i] = p[i];
         UNPROTECT(1);;
     }
     //utf8 string
     else if (jl_is_utf8_string(val))
     {
-        PROTECT(ans = allocArray(STRSXP, dims));
+        PROTECT(ans = Rf_allocArray(STRSXP, dims));
         for (size_t i = 0; i < len; i++)
-           SET_STRING_ELT(ans, i, mkCharCE(jl_string_data(jl_cellref(tt, i)), CE_UTF8));
+           SET_STRING_ELT(ans, i, Rf_mkCharCE(jl_string_data(jl_cellref(tt, i)), CE_UTF8));
        UNPROTECT(1);
     }
     else if (jl_is_ascii_string(val))
     {
-        PROTECT(ans = allocArray(STRSXP, dims));
+        PROTECT(ans = Rf_allocArray(STRSXP, dims));
         for (size_t i = 0; i < len; i++)
-           SET_STRING_ELT(ans, i, mkChar(jl_string_data(jl_cellref(tt, i))));
+           SET_STRING_ELT(ans, i, Rf_mkChar(jl_string_data(jl_cellref(tt, i))));
        UNPROTECT(1);
     }
     return ans;
@@ -326,20 +327,20 @@ SEXP jr_data_frame(jl_value_t *tt)
 
     size_t n = jl_array_len(jl_get_nth_field(jl_arrayref(columns, 0), 0));
     size_t m = jl_array_len(columns);
-    PROTECT(ans = allocVector(VECSXP, m));
-    PROTECT(rnames = allocVector(STRSXP, m));
+    PROTECT(ans = Rf_allocVector(VECSXP, m));
+    PROTECT(rnames = Rf_allocVector(STRSXP, m));
     for(size_t i=0; i<m; i++)
     {
         SET_VECTOR_ELT(ans, i, jr_data_array((jl_value_t *) jl_arrayref(columns, i)));
-        SET_STRING_ELT(rnames, i, mkChar(((jl_sym_t *) jl_arrayref(names, i))->name));
+        SET_STRING_ELT(rnames, i, Rf_mkChar(((jl_sym_t *) jl_arrayref(names, i))->name));
     }
-    setAttrib(ans, R_NamesSymbol, rnames);
-    setAttrib(ans, R_ClassSymbol, mkString("data.frame"));
-    d = PROTECT(allocVector(INTSXP ,n));
+    Rf_setAttrib(ans, R_NamesSymbol, rnames);
+    Rf_setAttrib(ans, R_ClassSymbol, Rf_mkString("data.frame"));
+    d = PROTECT(Rf_allocVector(INTSXP ,n));
     for(size_t i=0; i<n; i++){
         INTEGER(d)[i] = i+1;
     }
-    setAttrib(ans, R_RowNamesSymbol, d);
+    Rf_setAttrib(ans, R_RowNamesSymbol, d);
     UNPROTECT(3);
     JL_GC_POP();
     return ans;
@@ -352,16 +353,16 @@ SEXP jr_dict(jl_value_t *tt)
     jl_function_t *str = jl_get_function(jl_base_module, "string");
     jl_array_t *ctt = (jl_array_t *) jl_call1(jl_get_function(jl_base_module, "collect"), tt);
     size_t m = jl_array_len(ctt);
-    PROTECT(rnames = allocVector(STRSXP, m));
-    PROTECT(ans = allocVector(VECSXP, m));
+    PROTECT(rnames = Rf_allocVector(STRSXP, m));
+    PROTECT(ans = Rf_allocVector(VECSXP, m));
     jl_value_t *key;
     for(size_t i=0; i<m; i++)
     {
         SET_VECTOR_ELT(ans, i, jr_wrap(jl_tupleref(jl_arrayref(ctt, i), 1), 0));
         key = jl_call1(str, jl_tupleref(jl_arrayref(ctt, i), 0));
-        SET_STRING_ELT(rnames, i, mkChar(jl_string_data(key)));
+        SET_STRING_ELT(rnames, i, Rf_mkChar(jl_string_data(key)));
     }
-    setAttrib(ans, R_NamesSymbol, rnames);
+    Rf_setAttrib(ans, R_NamesSymbol, rnames);
     UNPROTECT(2);
     return ans;
 }
@@ -390,7 +391,7 @@ SEXP jr_wrap(jl_value_t *tt, bool own){
     }
     else if (jl_is_tuple(tt))
     {
-        PROTECT(ans = allocVector(VECSXP, jl_tuple_len(tt)));
+        PROTECT(ans = Rf_allocVector(VECSXP, jl_tuple_len(tt)));
         for (int i = 0; i < jl_tuple_len(tt); i++)
             SET_VECTOR_ELT(ans, i, jr_wrap(jl_tupleref(tt, i), 0));
         UNPROTECT(1);
