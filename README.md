@@ -12,7 +12,7 @@ Installation
 2. You are eithing using a binary distribution of Julia or a "make install" distribution.
 
 ```
-Pkg.add("RCall")
+Pkg.clone(https://github.com/randy3k/RCall.jl.git")
 ```
 
 Developed on Mac OSX 10.10, R 3.1.1, Julia 0.3.1
