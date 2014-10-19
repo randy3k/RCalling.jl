@@ -10,7 +10,7 @@
 #define IS_ASCII(x) (ENVFLAGS(x) & ASCII_MASK)
 #define IS_UTF8(x) (ENVFLAGS(x) & UTF8_MASK)
 
-static jl_tuple_t *rj_dim(SEXP ss)
+static inline jl_tuple_t *rj_dim(SEXP ss)
 {
     jl_tuple_t *d;
     SEXP dims = getAttrib(ss, R_DimSymbol);
@@ -146,6 +146,7 @@ jl_value_t *rj_wrap(SEXP ss)
             }
             default:
             {
+                jl_error("RCall does not know to convert this R object.");
                 ret = jl_nothing;
             }
         }
