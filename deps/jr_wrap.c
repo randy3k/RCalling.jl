@@ -5,6 +5,8 @@
 #include <julia.h>
 // mostly adapted from https://github.com/armgong/RJulia/blob/master/src/Julia_R.c
 
+SEXP jr_wrap(jl_value_t *tt, bool own);
+
 #define in_int32_range(x) x<=INT32_MAX && x>=INT32_MIN
 
 static inline bool jl_isa(jl_value_t* tt, char* type)
@@ -347,7 +349,22 @@ SEXP jr_data_frame(jl_value_t *tt)
 SEXP jr_dict(jl_value_t *tt)
 {
     SEXP ans = R_NilValue;
-    return ans;   
+    SEXP rnames;
+    jl_function_t *str = jl_get_function(jl_base_module, "string");
+    jl_array_t *ctt = (jl_array_t *) jl_call1(jl_get_function(jl_base_module, "collect"), tt);
+    size_t m = jl_array_len(ctt);
+    PROTECT(rnames = allocVector(STRSXP, m));
+    PROTECT(ans = allocVector(VECSXP, m));
+    jl_value_t *key;
+    for(size_t i=0; i<m; i++)
+    {
+        SET_ELEMENT(ans, i, jr_wrap(jl_tupleref(jl_arrayref(ctt, i), 1), 0));
+        key = jl_call1(str, jl_tupleref(jl_arrayref(ctt, i), 0));
+        SET_STRING_ELT(rnames, i, mkChar(jl_string_data(key)));
+    }
+    SET_NAMES(ans, rnames);
+    UNPROTECT(2);
+    return ans;
 }
 
 SEXP jr_wrap(jl_value_t *tt, bool own){
@@ -360,13 +377,6 @@ SEXP jr_wrap(jl_value_t *tt, bool own){
     {
         ans = jr_array(tt);
     }
-    else if (jl_is_tuple(tt))
-    {
-        PROTECT(ans = allocVector(VECSXP, jl_tuple_len(tt)));
-        for (int i = 0; i < jl_tuple_len(tt); i++)
-            SET_ELEMENT(ans, i, jr_wrap(jl_tupleref(tt, i), 0));
-        UNPROTECT(1);
-    }
     else if(jl_isa(tt, "Range"))
     {
         ans = jr_range(tt);
@@ -378,6 +388,13 @@ SEXP jr_wrap(jl_value_t *tt, bool own){
     else if(jl_isa(tt, "DataFrame"))
     {
         ans = jr_data_frame(tt);
+    }
+    else if (jl_is_tuple(tt))
+    {
+        PROTECT(ans = allocVector(VECSXP, jl_tuple_len(tt)));
+        for (int i = 0; i < jl_tuple_len(tt); i++)
+            SET_ELEMENT(ans, i, jr_wrap(jl_tupleref(tt, i), 0));
+        UNPROTECT(1);
     }
     else if(jl_isa(tt, "Dict"))
     {

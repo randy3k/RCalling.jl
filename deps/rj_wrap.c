@@ -63,7 +63,6 @@ static inline bool r_is_named(SEXP ss)
         if (INTEGER(v)[i]==0)
         {
             return 0;
-            break;
         }
     }
     return 1;

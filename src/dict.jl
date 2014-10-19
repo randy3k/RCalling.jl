@@ -1,4 +1,5 @@
 RDict(x::DataFrame) = jr_wrap(x)
+RDict(x::Dict) = jr_wrap(x)
 
 # list getter
 
@@ -28,3 +29,9 @@ function Base.show(io::IO, s::RDict)
 
     nothing
 end
+
+# converter
+Base.convert(::Type{DataFrame}, x::RDict) = rj_wrap(x)
+Base.convert(::Type{Dict}, x::RDict) = rj_wrap(x)
+Base.convert(::Type{RDict}, x::DataFrame) = jr_wrap(x)
+Base.convert(::Type{RDict}, x::Dict) = jr_wrap(x)

@@ -177,6 +177,8 @@ function Base.convert(::Type{RAny}, x)
         return RArray(x)
     elseif t<: DataFrame
         return RDict(x)
+    elseif t<: Dict
+        return RDict(x)
     else
         return x
     end
