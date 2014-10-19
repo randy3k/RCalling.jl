@@ -96,12 +96,15 @@ jl_value_t *rj_wrap(SEXP ss)
             }
             case VECSXP:
             {
-                // TODO: convert to Dict
-                ret = (jl_value_t *) jl_alloc_tuple(length(ss));
+                SEXP name = GET_NAMES(ss);
+                jl_datatype_t *ttype = (jl_datatype_t *) jl_eval_string("(Any, Any)");
+                ret = (jl_value_t *) rj_new_array(ttype, jl_tuple1(jl_box_int64(length(ss))));
                 JL_GC_PUSH1(&ret);
                 for (int i = 0; i < length(ss); i++)
                 {
-                    jl_tupleset(ret, i, rj_wrap(VECTOR_ELT(ss, i)));
+                    jl_arrayset((jl_array_t *) ret,
+                        (jl_value_t *) jl_tuple2(jl_cstr_to_string(CHAR(STRING_ELT(name, i))),
+                                            rj_wrap(VECTOR_ELT(ss, i))), i);
                 }
                 JL_GC_POP();
                 break;
