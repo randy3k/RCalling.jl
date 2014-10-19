@@ -106,6 +106,8 @@ jl_value_t *rj_wrap(SEXP ss)
                         (jl_value_t *) jl_tuple2(jl_cstr_to_string(CHAR(STRING_ELT(name, i))),
                                             rj_wrap(VECTOR_ELT(ss, i))), i);
                 }
+                jl_function_t *func = jl_get_function(jl_base_module, "Dict");
+                ret = jl_call1(func, ret);
                 JL_GC_POP();
                 break;
             }
