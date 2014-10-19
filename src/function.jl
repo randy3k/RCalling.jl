@@ -26,9 +26,9 @@ function Base.convert(::Type{Function}, f::RFunction)
             [typeof(a) <: RAny ? a : convert(RAny, a) for a in argv_named])
 
         ret = rcall(f, argv, vcat(argn_unnamed, argn_named))
-        if typeof(ret) <: Union(RArray{Int32}, RArray{Float64}, RArray{Bool}, RArray{UTF8String}, RArray{ASCIIString})
-            ret = convert(Array, ret)
-        end
+        # if typeof(ret) <: Union(RArray{Int32}, RArray{Float64}, RArray{Bool}, RArray{UTF8String}, RArray{ASCIIString})
+        #     ret = convert(Array, ret)
+        # end
         return ret
     end
 end
