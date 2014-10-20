@@ -92,6 +92,14 @@ jl_value_t *rj_data_array(SEXP ss)
     return ret;
 }
 
+
+jl_value_t *rj_pooled_data_array(SEXP ss){
+    jl_value_t *ret = JL_NULL;
+    jl_value_t *levels = rj_wrap(Rf_getAttrib(ss, R_LevelsSymbol));
+
+    return levels;
+}
+
 jl_value_t *rj_data_frame(SEXP ss)
 {
     jl_value_t *ret = JL_NULL;
@@ -176,8 +184,17 @@ jl_value_t *rj_wrap(SEXP ss)
             };
             case INTSXP:
             {
-                int *data = INTEGER(ss);
-                ret = (jl_value_t *) rj_array(jl_int32_type, data, dims);
+                SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
+                if (levels == R_NilValue)
+                {
+                    int *data = INTEGER(ss);
+                    ret = (jl_value_t *) rj_array(jl_int32_type, data, dims);
+                }
+                else
+                {
+                    // factor
+                    ret = rj_pooled_data_array(ss);
+                }
                 break;
             }
             case REALSXP:
@@ -188,6 +205,8 @@ jl_value_t *rj_wrap(SEXP ss)
             }
             case STRSXP:
             {
+                // FIXME: ASCII doens't work
+                printf("%d, %d\n", IS_ASCII(ss), IS_UTF8(ss));
                 if (!IS_ASCII(ss))
                     ret = (jl_value_t *) new_array(jl_utf8_string_type, dims);
                 else

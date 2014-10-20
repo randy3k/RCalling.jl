@@ -30,16 +30,17 @@ function rprint(io::IO, s::RAny)
     if s.ptr == C_NULL
         return
     end
-    oldout = STDOUT
-    (rd,wr) = redirect_stdout()
-    start_reading(rd)
+    # TODO: redirect rprint
+    # oldout = STDOUT
+    # (rd,wr) = redirect_stdout()
+    # start_reading(rd)
     ccall(rsym(:sexp_print), Void, (Ptr{Void},), s.ptr)
-    flush_cstdio()
-    yield()
-    redirect_stdout(oldout)
-    if nb_available(rd)>0
-        print(io, rstrip(readavailable(rd)))
-    end
+    # flush_cstdio()
+    # yield()
+    # redirect_stdout(oldout)
+    # if nb_available(rd)>0
+    #     print(io, rstrip(readavailable(rd)))
+    # end
     nothing
 end
 rprint(s::RAny) = rprint(STDOUT, s)
