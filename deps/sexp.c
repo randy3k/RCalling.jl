@@ -5,6 +5,21 @@
 
 extern jl_value_t *rj_wrap(SEXP ss);
 
+
+#define UTF8_MASK (1<<3)
+#define ASCII_MASK (1<<6)
+#define IS_ASCII(x) (ENVFLAGS(x) & ASCII_MASK)
+#define IS_UTF8(x) (ENVFLAGS(x) & UTF8_MASK)
+
+int sexp_is_ascii(SEXP ss)
+{
+    size_t n = LENGTH(ss);
+    for (size_t i=0; i<n; i++)
+        if (! IS_ASCII(STRING_ELT(ss, i)))
+            return 0;
+    return 1;
+}
+
 int sexp_named(const SEXP s)
 {
     int res = NAMED(s);

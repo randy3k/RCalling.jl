@@ -5,11 +5,7 @@
 #include <julia.h>
 // some of the followings are adapted from https://github.com/armgong/RJulia/blob/master/src/R_Julia.c
 
-#define UTF8_MASK (1<<3)
-#define ASCII_MASK (1<<6)
-#define IS_ASCII(x) (ENVFLAGS(x) & ASCII_MASK)
-#define IS_UTF8(x) (ENVFLAGS(x) & UTF8_MASK)
-
+extern int sexp_is_ascii(SEXP ss);
 extern jl_tuple_t *sexp_size(const SEXP s);
 extern jl_array_t *sexp_names(const SEXP s);
 jl_value_t *rj_wrap(SEXP ss);
@@ -24,7 +20,7 @@ static inline jl_array_t *new_array(jl_datatype_t *type, jl_tuple_t *dims)
   return jl_new_array(jl_apply_array_type(type, jl_tuple_len(dims)), dims);
 }
 
-static inline bool IS_NAMED(SEXP ss)
+static inline bool is_named(SEXP ss)
 {
     SEXP name = Rf_getAttrib(ss, R_NamesSymbol);
     SEXP e, v;
@@ -141,7 +137,7 @@ jl_value_t *rj_list(SEXP ss)
     jl_datatype_t *ttype = (jl_datatype_t *) jl_eval_string("(Any, Any)");
     ret = (jl_value_t *) new_array(ttype, jl_tuple1(jl_box_int64(n)));
     JL_GC_PUSH1(&ret);
-    if (IS_NAMED(ss))
+    if (is_named(ss))
     {
         jl_array_t *names = sexp_names(ss);
         for (int i = 0; i < n; i++)
@@ -205,18 +201,13 @@ jl_value_t *rj_wrap(SEXP ss)
             }
             case STRSXP:
             {
-                // FIXME: ASCII doens't work
-                printf("%d, %d\n", IS_ASCII(ss), IS_UTF8(ss));
-                if (!IS_ASCII(ss))
-                    ret = (jl_value_t *) new_array(jl_utf8_string_type, dims);
-                else
+                if (sexp_is_ascii(ss))
                     ret = (jl_value_t *) new_array(jl_ascii_string_type, dims);
+                else
+                    ret = (jl_value_t *) new_array(jl_utf8_string_type, dims);
                 JL_GC_PUSH1(&ret);
                 jl_value_t **data = jl_array_data(ret);
                 for (size_t i = 0; i < jl_array_len(ret); i++)
-                    if (!IS_ASCII(ss))
-                        data[i] = jl_cstr_to_string(Rf_translateChar0(STRING_ELT(ss, i)));
-                    else
                         data[i] = jl_cstr_to_string(CHAR(STRING_ELT(ss, i)));
                 JL_GC_POP();
                 break;
