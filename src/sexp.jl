@@ -186,5 +186,3 @@ function Base.convert(::Type{RAny}, x)
         return x
     end
 end
-
-Base.convert(::Type{Any}, x::RNull) = None
