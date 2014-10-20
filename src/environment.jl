@@ -19,7 +19,11 @@ end
 
 function rget(x::ASCIIString, env::REnvironment)
     ptr = ccall(rsym(:RCall_findVar), Ptr{Void}, (Ptr{Uint8},Ptr{Void}), pointer(x.data), env.ptr)
-    _factory(ptr)
+    obj = _factory(ptr)
+    if rtypeof(obj) == 0
+        error("Cannot get object.")
+    end
+    return obj
 end
 rget(x::ASCIIString) = rget(x, GlobalEnv())
 
