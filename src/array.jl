@@ -37,14 +37,14 @@ Base.setindex!{N}(x::RArray{Bool, N}, y::RArray{Bool, N}, args...) = Base.setind
 # string vector getter
 
 function Base.getindex{N}(x::RArray{UTF8String, N}, i)
-    ptr = ccall(rsym(:sexp_subset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x, convert(RArray, i))
+    ptr = ccall(rsym(:sexp_subset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x.ptr, convert(RArray, i).ptr)
     _factory(ptr)
 end
 
 # string matrix getter
 
 function Base.getindex(x::RArray{UTF8String, 2}, i, j)
-    ptr = ccall(rsym(:sexp_subset2), Ptr{Void}, (Ptr{Void}, Ptr{Void}, Ptr{Void}), x, convert(RArray, i), convert(RArray, j))
+    ptr = ccall(rsym(:sexp_subset2), Ptr{Void}, (Ptr{Void}, Ptr{Void}, Ptr{Void}), x.ptr, convert(RArray, i).ptr, convert(RArray, j).ptr)
     _factory(ptr)
 end
 
@@ -79,5 +79,6 @@ Base.convert{T<:ByteString, N}(::Type{Array}, x::RArray{T,N}) = rj_wrap(x)
 # convert j to r
 Base.convert{T<:Real, N}(::Type{RArray}, x::Array{T, N}) = jr_wrap(x)
 Base.convert{T<:ByteString, N}(::Type{RArray}, x::Array{T, N}) = jr_wrap(x)
+Base.convert{T<:Real}(::Type{RArray}, x::Range{T}) = jr_wrap(x)
 Base.convert(::Type{RArray}, x::Real) = jr_wrap(x)
 Base.convert(::Type{RArray}, x::ByteString) = jr_wrap(x)
