@@ -89,3 +89,11 @@ macro rimport(x, args...)
         end
     end
 end
+
+macro rusing(x)
+    symbol = Expr(:quote, x)
+    quote
+        @rimport($x)
+        eval(Expr(:toplevel, Expr(:using, $symbol)))
+    end
+end
