@@ -23,6 +23,9 @@ function rj_wrap(x::RAny)
 end
 
 # print function
+Base.show(io::IO, s::RAny) = print(io, typeof(s))
+
+# print function
 function rprint(io::IO, s::RAny)
     if s.ptr == C_NULL
         return
