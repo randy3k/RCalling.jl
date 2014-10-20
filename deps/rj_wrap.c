@@ -54,7 +54,7 @@ static inline bool ISA(SEXP ss, const char *name)
 
 jl_value_t *rj_data_frame(SEXP ss)
 {
-    jl_value_t *ret = jl_nothing;
+    jl_value_t *ret = jl_null;
     if (TYPEOF(ss) == VECSXP)
     {
         SEXP rownames = PROTECT(Rf_getAttrib(ss, R_RowNamesSymbol));
@@ -118,7 +118,7 @@ jl_value_t *rj_list(SEXP ss)
 
 jl_value_t *rj_wrap(SEXP ss)
 {
-    jl_value_t *ret = jl_nothing;
+    jl_value_t *ret = jl_null;
     if ((LENGTH(ss)) != 0)
     {
         jl_tuple_t *dims = sexp_size(ss);
@@ -173,7 +173,7 @@ jl_value_t *rj_wrap(SEXP ss)
             default:
             {
                 jl_error("RCall does not know to convert this R object.");
-                ret = jl_nothing;
+                ret = jl_null;
             }
         }
     }
