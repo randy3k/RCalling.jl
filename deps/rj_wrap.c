@@ -1,6 +1,5 @@
 #define R_NO_REMAP
 #include <stdbool.h>
-#include <stdlib.h>
 #include <R.h>
 #include <Rinternals.h>
 #include <julia.h>
