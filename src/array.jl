@@ -74,12 +74,18 @@ Base.next(x::RArray, state) = x[state], state+1
 # converter r to j
 
 Base.convert{N}(::Type{Array}, x::RArray{Bool,N}) = rj_wrap(x)
-Base.convert{T<:Union(Int32, Float64), N}(::Type{Array}, x::RArray{T,N}) = deepcopy(rj_wrap(x))
+Base.convert{T<:Real, N}(::Type{Array}, x::RArray{T,N}) = deepcopy(rj_wrap(x))
 Base.convert{T<:ByteString, N}(::Type{Array}, x::RArray{T,N}) = rj_wrap(x)
+# TODO: RArray to DataArray
+# Base.convert{T, N}(::Type{DataArray}, x::RArray{T, N}) = rj_wrap(x)
+
 
 # convert j to r
 Base.convert{T<:Real, N}(::Type{RArray}, x::Array{T, N}) = jr_wrap(x)
-Base.convert{T<:ByteString, N}(::Type{RArray}, x::Array{T, N}) = jr_wrap(x)
-Base.convert{T<:Real}(::Type{RArray}, x::Range{T}) = jr_wrap(x)
+Base.convert{T<:Real, N}(::Type{RArray}, x::DataArray{T, N}) = jr_wrap(x)
 Base.convert(::Type{RArray}, x::Real) = jr_wrap(x)
+Base.convert{T<:Real}(::Type{RArray}, x::Range{T}) = jr_wrap(x)
+
+Base.convert{T<:ByteString, N}(::Type{RArray}, x::Array{T, N}) = jr_wrap(x)
+Base.convert{T<:ByteString, N}(::Type{RArray}, x::DataArray{T, N}) = jr_wrap(x)
 Base.convert(::Type{RArray}, x::ByteString) = jr_wrap(x)

@@ -31,7 +31,7 @@ function Base.show(io::IO, s::RList)
 end
 
 # converter
-Base.convert(::Type{DataFrame}, x::RList) = Base.convert(DataFrame, rj_wrap(x))
+Base.convert(::Type{DataFrame}, x::RList) = rj_wrap(x)
 function Base.convert(::Type{Dict}, x::RList)
     ptr = ccall(rsym(:rj_list), Ptr{Any}, (Ptr{Void},), x.ptr)
     unsafe_pointer_to_objref(ptr)
