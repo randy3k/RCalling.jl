@@ -108,7 +108,7 @@ jl_value_t *rj_data_frame(SEXP ss)
         JL_GC_PUSH4(&columns, &names, &sym, &ret);
 
         if (align)
-        // if row names are not string
+        // if row names are string
         {
             jl_arrayset(columns, rj_wrap(rownames), 0);
             jl_arrayset(sym, (jl_value_t *) jl_symbol("RowID"), 0);
