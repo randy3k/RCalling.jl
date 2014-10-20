@@ -92,8 +92,12 @@ jl_value_t *rj_data_array(SEXP ss)
 jl_value_t *rj_pooled_data_array(SEXP ss){
     jl_value_t *ret = JL_NULL;
     jl_value_t *levels = rj_wrap(Rf_getAttrib(ss, R_LevelsSymbol));
-
-    return levels;
+    jl_value_t *tt = (jl_value_t *) rj_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
+    JL_GC_PUSH2(&tt, &levels);
+    jl_value_t *index = jl_call1(jl_eval_string("DataArrays.RefArray"), tt) ;
+    ret = jl_call2(jl_get_function(jl_current_module, "PooledDataArray"), index, levels);
+    JL_GC_POP();
+    return ret;
 }
 
 jl_value_t *rj_data_frame(SEXP ss)
@@ -201,14 +205,18 @@ jl_value_t *rj_wrap(SEXP ss)
             }
             case STRSXP:
             {
-                if (sexp_is_ascii(ss))
+                int is_ascii = sexp_is_ascii(ss);
+                if (is_ascii)
                     ret = (jl_value_t *) new_array(jl_ascii_string_type, dims);
                 else
                     ret = (jl_value_t *) new_array(jl_utf8_string_type, dims);
                 JL_GC_PUSH1(&ret);
                 jl_value_t **data = jl_array_data(ret);
                 for (size_t i = 0; i < jl_array_len(ret); i++)
+                    if (is_ascii)
                         data[i] = jl_cstr_to_string(CHAR(STRING_ELT(ss, i)));
+                    else
+                        data[i] = jl_cstr_to_string(Rf_translateChar0(STRING_ELT(ss, i)));
                 JL_GC_POP();
                 break;
             }
