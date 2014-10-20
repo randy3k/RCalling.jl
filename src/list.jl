@@ -31,7 +31,7 @@ function Base.show(io::IO, s::RList)
 end
 
 # converter
-function Base.convert(::Type{DaraFrame}, x::RList)
+function Base.convert(::Type{DataFrame}, x::RList)
     ptr = ccall(rsym(:rj_data_frame), Ptr{Any}, (Ptr{Void},), x.ptr)
     unsafe_pointer_to_objref(ptr)
 end

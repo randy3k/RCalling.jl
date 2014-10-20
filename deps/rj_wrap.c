@@ -52,9 +52,49 @@ static inline bool ISA(SEXP ss, const char *name)
     return 0;
 }
 
+
+jl_value_t *rj_data_array(SEXP ss)
+{
+    jl_value_t *ret = JL_NULL;
+    size_t n = LENGTH(ss);
+    jl_array_t *na = new_array(jl_bool_type, jl_tuple1(jl_box_int64(n)));
+    JL_GC_PUSH2(&na, &ret);
+
+    int ty = TYPEOF(ss);
+    int isna = 0;
+    for(size_t i=0; i<n; i++)
+    {
+        isna = 0;
+        switch(ty) {
+          case LGLSXP:
+            isna = (LOGICAL(ss)[i] == NA_LOGICAL);
+            break;
+          case INTSXP:
+            isna = (INTEGER(ss)[i] == NA_INTEGER);
+            break;
+          case REALSXP:
+            isna = ISNAN(REAL(ss)[i]);
+            break;
+          case STRSXP:
+            isna = (STRING_ELT(ss, i) == NA_STRING);
+            break;
+          default:
+            isna = 0;
+        }
+        if (isna)
+            jl_arrayset(na, jl_true, i);
+        else
+            jl_arrayset(na, jl_false, i);
+    }
+    JL_GC_POP();
+    jl_function_t *func = jl_get_function(jl_current_module, "DataArray");
+    ret = jl_call2(func, (jl_value_t *) rj_wrap(ss), (jl_value_t *) na);
+    return ret;
+}
+
 jl_value_t *rj_data_frame(SEXP ss)
 {
-    jl_value_t *ret = jl_null;
+    jl_value_t *ret = JL_NULL;
     if (TYPEOF(ss) == VECSXP)
     {
         SEXP rownames = PROTECT(Rf_getAttrib(ss, R_RowNamesSymbol));
@@ -75,7 +115,7 @@ jl_value_t *rj_data_frame(SEXP ss)
         }
         for (int i = 0; i < n; i++)
         {
-            jl_arrayset(columns, rj_wrap(VECTOR_ELT(ss, i)), i+align);
+            jl_arrayset(columns, rj_data_array(VECTOR_ELT(ss, i)), i+align);
             jl_arrayset(sym, (jl_value_t *) jl_symbol(jl_string_data(jl_arrayref(names, i))), i+align);
         }
         jl_function_t *func = jl_get_function(jl_current_module, "DataFrame");
@@ -118,7 +158,7 @@ jl_value_t *rj_list(SEXP ss)
 
 jl_value_t *rj_wrap(SEXP ss)
 {
-    jl_value_t *ret = jl_null;
+    jl_value_t *ret = JL_NULL;
     if ((LENGTH(ss)) != 0)
     {
         jl_tuple_t *dims = sexp_size(ss);
@@ -173,7 +213,7 @@ jl_value_t *rj_wrap(SEXP ss)
             default:
             {
                 jl_error("RCall does not know to convert this R object.");
-                ret = jl_null;
+                ret = JL_NULL;
             }
         }
     }
