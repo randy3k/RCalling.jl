@@ -85,9 +85,9 @@ SEXP sexp_get_attr(const SEXP s, char *name)
 SEXP sexp_subset(const SEXP s, const SEXP i)
 {
     int errorOccurred;
-    SEXP fun, ret;
-    fun = PROTECT(Rf_findFun(Rf_install(".subset"),  R_GlobalEnv));
-    ret = R_tryEval(Rf_lang3(fun, s, i), R_GlobalEnv, &errorOccurred);
+    SEXP e, ret;
+    e = PROTECT(Rf_lang3(Rf_install(".subset"), s, i));
+    ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
     R_PreserveObject(ret);
     UNPROTECT(1);
     return ret;
@@ -97,9 +97,9 @@ SEXP sexp_subset(const SEXP s, const SEXP i)
 SEXP sexp_subset2(const SEXP s, const SEXP i, const SEXP j)
 {
     int errorOccurred;
-    SEXP fun, ret;
-    fun = PROTECT(Rf_findFun(Rf_install(".subset"),  R_GlobalEnv));
-    ret = R_tryEval(Rf_lang4(fun, s, i, j), R_GlobalEnv, &errorOccurred);
+    SEXP e, ret;
+    e = PROTECT(Rf_lang4(Rf_install(".subset"), s, i, j));
+    ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
     R_PreserveObject(ret);
     UNPROTECT(1);
     return ret;
@@ -109,9 +109,9 @@ SEXP sexp_subset2(const SEXP s, const SEXP i, const SEXP j)
 SEXP sexp_listsubset(const SEXP s, const SEXP i)
 {
     int errorOccurred;
-    SEXP fun, ret;
-    fun = PROTECT(Rf_findFun(Rf_install(".subset2"),  R_GlobalEnv));
-    ret = R_tryEval(Rf_lang3(fun, s, i), R_GlobalEnv, &errorOccurred);
+    SEXP e, ret;
+    e = PROTECT(Rf_lang3(Rf_install(".subset2"), s, i));
+    ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
     R_PreserveObject(ret);
     UNPROTECT(1);
     return ret;
@@ -140,8 +140,8 @@ void *sexp_pointer(const SEXP x)
 void sexp_print(const SEXP s)
 {
     int errorOccurred;
-    SEXP fun;
-    fun = PROTECT(Rf_findFun(Rf_install("print"),  R_GlobalEnv));
-    R_tryEval(Rf_lang2(fun, s), R_GlobalEnv, &errorOccurred);
+    SEXP e;
+    e = PROTECT(Rf_lang2(Rf_install("print"), s));
+    R_tryEval(e, R_GlobalEnv, &errorOccurred);
     UNPROTECT(1);
 }

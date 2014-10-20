@@ -27,12 +27,12 @@ static inline jl_array_t *new_array(jl_datatype_t *type, jl_tuple_t *dims)
 static inline bool IS_NAMED(SEXP ss)
 {
     SEXP name = Rf_getAttrib(ss, R_NamesSymbol);
-    SEXP fun, v;
+    SEXP e, v;
     if (name == R_NilValue) return 0;
     int errorOccurred;
-    fun = PROTECT(Rf_findFun(Rf_install("nchar"),  R_GlobalEnv));
-    v = R_tryEval(Rf_lang2(fun, name), R_GlobalEnv, &errorOccurred);
-    UNPROTECT(1);
+    e = PROTECT(Rf_lang2(Rf_install("nchar"), name));
+    v = PROTECT(R_tryEval(e, R_GlobalEnv, &errorOccurred));
+    UNPROTECT(2);
     if (v == R_NilValue) return 0;
     for(int i=0; i<LENGTH(v); i++)
     {
