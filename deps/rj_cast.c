@@ -143,23 +143,17 @@ jl_value_t *rj_array(SEXP ss)
             break;
         }
         default:
-            jl_error("RCall does not know to convert this R object.");
+            jl_error("RCall does not know how to convert this R object.");
     }
     return ret;
 }
 
-jl_value_t *rj_data_array(SEXP ss)
+
+static inline jl_value_t *rj_array_uncheck(SEXP ss)
 {
-    jl_value_t *ret = JL_NULL;
-    SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
-    if (levels != R_NilValue)
-    {
-        jl_error("Convert to PooledDataArray instead.");
-        return ret;
-    }
     size_t n = LENGTH(ss);
     jl_array_t *na = new_array(jl_bool_type, jl_tuple1(jl_box_long(n)));
-    JL_GC_PUSH2(&na, &ret);
+    JL_GC_PUSH1(&na);
 
     int ty = TYPEOF(ss);
     int isna = 0;
@@ -189,8 +183,19 @@ jl_value_t *rj_data_array(SEXP ss)
     }
     JL_GC_POP();
     jl_function_t *func = jl_get_function(jl_current_module, "DataArray");
-    ret = jl_call2(func, (jl_value_t *) rj_array(ss), (jl_value_t *) na);
+    jl_value_t *ret = jl_call2(func, (jl_value_t *) rj_array(ss), (jl_value_t *) na);
     return ret;
+}
+
+jl_value_t *rj_data_array(SEXP ss)
+{
+    SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
+    if (levels != R_NilValue)
+    {
+        jl_error("Convert to PooledDataArray instead.");
+        return JL_NULL;
+    }
+    return rj_array_uncheck(ss);
 }
 
 
@@ -203,11 +208,10 @@ jl_value_t *rj_pooled_data_array(SEXP ss)
         jl_error("Expect factor array.");
         return ret;
     }
-    jl_value_t *labels = rj_array(levels);
+    jl_value_t *labels = rj_array_uncheck(levels);
     jl_value_t *tt;
     if (array_has_na(ss))
-        // FIXME: remove ss levels
-        tt = (jl_value_t *) rj_data_array(ss);
+        tt = (jl_value_t *) rj_array_uncheck(ss);
     else
         tt = (jl_value_t *) ptr_to_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
     JL_GC_PUSH2(&tt, &labels);
@@ -315,7 +319,7 @@ jl_value_t *rj_cast(SEXP ss)
         }
         else
         {
-            jl_error("RCall does not know to convert this R object.");
+            jl_error("RCall does not know how to convert this R object.");
             ret = JL_NULL;
         }
     }

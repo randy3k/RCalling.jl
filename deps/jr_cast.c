@@ -269,7 +269,11 @@ SEXP jr_array(jl_value_t *tt)
            SET_STRING_ELT(ans, i, Rf_mkChar(jl_string_data(jl_cellref(tt, i))));
        UNPROTECT(1);
     }
-    return ans;
+    else{
+        jl_error("RCall does not know how to convert this Julia object.");
+    }
+
+    return ans;g
 }
 
 SEXP jr_range(jl_value_t *tt) {
@@ -400,6 +404,10 @@ SEXP jr_cast(jl_value_t *tt, bool own){
         ans = jr_scalar(tt);
     }
     JL_GC_POP();
+    if (ans == R_NilValue)
+    {
+        jl_error("RCall does not know how to convert this Julia object.");
+    }
     if (own)
         R_PreserveObject(ans);
     return ans;
