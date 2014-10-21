@@ -8,9 +8,9 @@
 extern int sexp_is_ascii(SEXP ss);
 extern jl_tuple_t *sexp_size(const SEXP s);
 extern jl_array_t *sexp_names(const SEXP s);
-jl_value_t *rj_wrap(SEXP ss);
+jl_value_t *rj_cast(SEXP ss);
 
-static inline jl_array_t *rj_array(jl_datatype_t *type, void* data, jl_tuple_t *dims)
+static inline jl_array_t *rj_ptr_to_array(jl_datatype_t *type, void* data, jl_tuple_t *dims)
 {
   return jl_ptr_to_array(jl_apply_array_type(type, jl_tuple_len(dims)), data, dims, 0);
 }
@@ -40,7 +40,7 @@ static inline bool is_named(SEXP ss)
     return 1;
 }
 
-static inline bool ISA(SEXP ss, const char *name)
+static inline bool r_isa(SEXP ss, const char *name)
 {
     SEXP cls = Rf_getAttrib(ss, R_ClassSymbol);
     if (cls == R_NilValue) return 0;
@@ -52,6 +52,12 @@ static inline bool ISA(SEXP ss, const char *name)
 jl_value_t *rj_data_array(SEXP ss)
 {
     jl_value_t *ret = JL_NULL;
+    SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
+    if (levels != R_NilValue)
+    {
+        jl_error("Convert to PooledDataArray instead.");
+        return ret;
+    }
     size_t n = LENGTH(ss);
     jl_array_t *na = new_array(jl_bool_type, jl_tuple1(jl_box_long(n)));
     JL_GC_PUSH2(&na, &ret);
@@ -84,7 +90,7 @@ jl_value_t *rj_data_array(SEXP ss)
     }
     JL_GC_POP();
     jl_function_t *func = jl_get_function(jl_current_module, "DataArray");
-    ret = jl_call2(func, (jl_value_t *) rj_wrap(ss), (jl_value_t *) na);
+    ret = jl_call2(func, (jl_value_t *) rj_cast(ss), (jl_value_t *) na);
     return ret;
 }
 
@@ -92,11 +98,17 @@ jl_value_t *rj_data_array(SEXP ss)
 jl_value_t *rj_pooled_data_array(SEXP ss)
 {
     jl_value_t *ret = JL_NULL;
-    jl_value_t *levels = rj_wrap(Rf_getAttrib(ss, R_LevelsSymbol));
-    jl_value_t *tt = (jl_value_t *) rj_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
-    JL_GC_PUSH2(&tt, &levels);
+    SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
+    if (levels == R_NilValue)
+    {
+        jl_error("Expect factor array.");
+        return ret;
+    }
+    jl_value_t *labels = rj_cast(levels);
+    jl_value_t *tt = (jl_value_t *) rj_ptr_to_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
+    JL_GC_PUSH2(&tt, &labels);
     jl_value_t *index = jl_call1(jl_eval_string("DataArrays.RefArray"), tt) ;
-    ret = jl_call2(jl_get_function(jl_current_module, "PooledDataArray"), index, levels);
+    ret = jl_call2(jl_get_function(jl_current_module, "PooledDataArray"), index, labels);
     JL_GC_POP();
     return ret;
 }
@@ -119,12 +131,18 @@ jl_value_t *rj_data_frame(SEXP ss)
         if (align)
         // if row names are string
         {
-            jl_arrayset(columns, rj_wrap(rownames), 0);
+            jl_arrayset(columns, rj_cast(rownames), 0);
             jl_arrayset(sym, (jl_value_t *) jl_symbol("RowID"), 0);
         }
+        SEXP ssi;
         for (int i = 0; i < n; i++)
         {
-            jl_arrayset(columns, rj_data_array(VECTOR_ELT(ss, i)), i+align);
+            ssi = VECTOR_ELT(ss, i);
+            if (Rf_getAttrib(ssi, R_LevelsSymbol) == R_NilValue)
+                jl_arrayset(columns, rj_data_array(ssi), i+align);
+            else
+                jl_arrayset(columns, rj_pooled_data_array(ssi), i+align);
+
             jl_arrayset(sym, (jl_value_t *) jl_symbol(jl_string_data(jl_arrayref(names, i))), i+align);
         }
         jl_function_t *func = jl_get_function(jl_current_module, "DataFrame");
@@ -148,7 +166,7 @@ jl_value_t *rj_list(SEXP ss)
         for (int i = 0; i < n; i++)
         {
             jl_arrayset((jl_array_t *) ret,
-                (jl_value_t *) jl_tuple2(jl_arrayref(names, i), rj_wrap(VECTOR_ELT(ss, i))), i);
+                (jl_value_t *) jl_tuple2(jl_arrayref(names, i), rj_cast(VECTOR_ELT(ss, i))), i);
         }
     }
     else
@@ -156,7 +174,7 @@ jl_value_t *rj_list(SEXP ss)
         for (int i = 0; i < n; i++)
         {
             jl_arrayset((jl_array_t *) ret,
-                (jl_value_t *) jl_tuple2(jl_box_long(i+1), rj_wrap(VECTOR_ELT(ss, i))), i);
+                (jl_value_t *) jl_tuple2(jl_box_long(i+1), rj_cast(VECTOR_ELT(ss, i))), i);
         }
     }
     jl_function_t *func = jl_get_function(jl_base_module, "Dict");
@@ -165,75 +183,97 @@ jl_value_t *rj_list(SEXP ss)
     return ret;
 }
 
-jl_value_t *rj_wrap(SEXP ss)
+jl_value_t *rj_array(SEXP ss)
 {
+    jl_value_t *ret = JL_NULL;
+    SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
+    if (levels != R_NilValue)
+    {
+        jl_error("Convert to PooledDataArray instead.");
+        return ret;
+    }
+    jl_tuple_t *dims = sexp_size(ss);
+    switch (TYPEOF(ss))
+    {
+        case LGLSXP:
+        {
+            ret = (jl_value_t *) new_array(jl_bool_type, dims);
+            JL_GC_PUSH1(&ret);
+            bool *data = (bool *)jl_array_data(ret);
+            for (size_t i = 0; i < jl_array_len(ret); i++)
+                data[i] = LOGICAL(ss)[i];
+            JL_GC_POP();
+            break;
+        };
+        case INTSXP:
+        {
+            ret = (jl_value_t *) new_array(jl_int32_type, dims);
+            JL_GC_PUSH1(&ret);
+            int *data = (int *)jl_array_data(ret);
+            for (size_t i = 0; i < jl_array_len(ret); i++)
+                data[i] = INTEGER(ss)[i];
+            JL_GC_POP();
+            break;
+        }
+        case REALSXP:
+        {
+            ret = (jl_value_t *) new_array(jl_float64_type, dims);
+            JL_GC_PUSH1(&ret);
+            double *data = (double *)jl_array_data(ret);
+            for (size_t i = 0; i < jl_array_len(ret); i++)
+                data[i] = REAL(ss)[i];
+            JL_GC_POP();
+            break;
+        }
+        case STRSXP:
+        {
+            int is_ascii = sexp_is_ascii(ss);
+            if (is_ascii)
+                ret = (jl_value_t *) new_array(jl_ascii_string_type, dims);
+            else
+                ret = (jl_value_t *) new_array(jl_utf8_string_type, dims);
+            JL_GC_PUSH1(&ret);
+            jl_value_t **data = jl_array_data(ret);
+            for (size_t i = 0; i < jl_array_len(ret); i++)
+                if (is_ascii)
+                    data[i] = jl_cstr_to_string(CHAR(STRING_ELT(ss, i)));
+                else
+                    data[i] = jl_cstr_to_string(Rf_translateChar0(STRING_ELT(ss, i)));
+            JL_GC_POP();
+            break;
+        }
+    }
+    return ret;
+}
+
+jl_value_t *rj_cast(SEXP ss)
+{
+    // TODO: check na
     jl_value_t *ret = JL_NULL;
     if ((LENGTH(ss)) != 0)
     {
-        jl_tuple_t *dims = sexp_size(ss);
-        switch (TYPEOF(ss))
+        int ty = TYPEOF(ss);
+        if ((ty == LGLSXP) || (ty == REALSXP) || (ty == STRSXP))
+            ret = rj_array(ss);
+        else if(ty == INTSXP)
         {
-            case LGLSXP:
-            {
-                ret = (jl_value_t *) new_array(jl_bool_type, dims);
-                JL_GC_PUSH1(&ret);
-                bool *data = (bool *)jl_array_data(ret);
-                for (size_t i = 0; i < jl_array_len(ret); i++)
-                    data[i] = LOGICAL(ss)[i];
-                JL_GC_POP();
-                break;
-            };
-            case INTSXP:
-            {
-                SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
-                if (levels == R_NilValue)
-                {
-                    int *data = INTEGER(ss);
-                    ret = (jl_value_t *) rj_array(jl_int32_type, data, dims);
-                }
-                else
-                {
-                    // factor
-                    ret = rj_pooled_data_array(ss);
-                }
-                break;
-            }
-            case REALSXP:
-            {
-                double *data = REAL(ss);
-                ret = (jl_value_t *) rj_array(jl_float64_type, data, dims);
-                break;
-            }
-            case STRSXP:
-            {
-                int is_ascii = sexp_is_ascii(ss);
-                if (is_ascii)
-                    ret = (jl_value_t *) new_array(jl_ascii_string_type, dims);
-                else
-                    ret = (jl_value_t *) new_array(jl_utf8_string_type, dims);
-                JL_GC_PUSH1(&ret);
-                jl_value_t **data = jl_array_data(ret);
-                for (size_t i = 0; i < jl_array_len(ret); i++)
-                    if (is_ascii)
-                        data[i] = jl_cstr_to_string(CHAR(STRING_ELT(ss, i)));
-                    else
-                        data[i] = jl_cstr_to_string(Rf_translateChar0(STRING_ELT(ss, i)));
-                JL_GC_POP();
-                break;
-            }
-            case VECSXP:
-            {
-                if (ISA(ss, "data.frame"))
-                    ret = rj_data_frame(ss);
-                else
-                    ret = rj_list(ss);
-                break;
-            }
-            default:
-            {
-                jl_error("RCall does not know to convert this R object.");
-                ret = JL_NULL;
-            }
+            SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
+            if (levels == R_NilValue)
+                ret = rj_array(ss);
+            else
+                ret = rj_pooled_data_array(ss);
+        }
+        else if(ty== VECSXP)
+        {
+            if (r_isa(ss, "data.frame"))
+                ret = rj_data_frame(ss);
+            else
+                ret = rj_list(ss);
+        }
+        else
+        {
+            jl_error("RCall does not know to convert this R object.");
+            ret = JL_NULL;
         }
     }
     return (jl_value_t *) ret;

@@ -5,7 +5,7 @@
 #include <julia.h>
 // mostly adapted from https://github.com/armgong/RJulia/blob/master/src/Julia_R.c
 
-SEXP jr_wrap(jl_value_t *tt, bool own);
+SEXP jr_cast(jl_value_t *tt, bool own);
 
 #define in_int32_range(x) x<=INT32_MAX && x>=INT32_MIN
 
@@ -358,7 +358,7 @@ SEXP jr_dict(jl_value_t *tt)
     jl_value_t *key;
     for(size_t i=0; i<m; i++)
     {
-        SET_VECTOR_ELT(ans, i, jr_wrap(jl_tupleref(jl_arrayref(ctt, i), 1), 0));
+        SET_VECTOR_ELT(ans, i, jr_cast(jl_tupleref(jl_arrayref(ctt, i), 1), 0));
         key = jl_call1(str, jl_tupleref(jl_arrayref(ctt, i), 0));
         SET_STRING_ELT(rnames, i, Rf_mkChar(jl_string_data(key)));
     }
@@ -367,7 +367,7 @@ SEXP jr_dict(jl_value_t *tt)
     return ans;
 }
 
-SEXP jr_wrap(jl_value_t *tt, bool own){
+SEXP jr_cast(jl_value_t *tt, bool own){
     SEXP ans = R_NilValue;
     JL_GC_PUSH1(&tt);
     if (jl_is_nothing(tt) || jl_is_null(tt))
@@ -393,7 +393,7 @@ SEXP jr_wrap(jl_value_t *tt, bool own){
     {
         PROTECT(ans = Rf_allocVector(VECSXP, jl_tuple_len(tt)));
         for (int i = 0; i < jl_tuple_len(tt); i++)
-            SET_VECTOR_ELT(ans, i, jr_wrap(jl_tupleref(tt, i), 0));
+            SET_VECTOR_ELT(ans, i, jr_cast(jl_tupleref(tt, i), 0));
         UNPROTECT(1);
     }
     else if(jl_isa(tt, "Dict"))

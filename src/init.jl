@@ -1,11 +1,9 @@
-handler = dlopen(shared_file)
-# TODO: symbol cache
-rsym(s) = dlsym(handler, s)
-
 function init()
     rhome = rstrip(readall(`R RHOME`))
     ENV["R_HOME"] = rhome
-    ret = ccall(rsym(:RCall_init), Int32, ())
+    ret = ccall(rsym(:rcall_init), Int32, ())
+    set_global_env()
+    set_base_env()
     return ret
 end
 
@@ -18,6 +16,6 @@ function gui()
 end
 
 function ProcessEvents()
-    ccall(rsym(:RCall_ProcessEvents), Void, ())
+    ccall(rsym(:rcall_process_events), Void, ())
     nothing
 end

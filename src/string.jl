@@ -27,8 +27,14 @@ end
 
 # convertor
 
-Base.convert{T<:ByteString, N}(::Type{Array}, x::RArray{T,N}) = rj_wrap(x)
+# r to j
+Base.convert{T<:ByteString, N}(::Type{Array}, x::RArray{T,N}) = rj_cast(x)
+function Base.convert{T<:ByteString, N}(::Type{DataArray}, x::RArray{T, N})
+	ptr = ccall(rsym(:rj_data_array), Ptr{Any}, (Ptr{Void},), x.ptr)
+	unsafe_pointer_to_objref(ptr)
+end
 
-Base.convert{T<:ByteString, N}(::Type{RArray}, x::Array{T, N}) = jr_wrap(x)
-Base.convert{T<:ByteString, N}(::Type{RArray}, x::DataArray{T, N}) = jr_wrap(x)
-Base.convert(::Type{RArray}, x::ByteString) = jr_wrap(x)
+# j to r
+Base.convert{T<:ByteString, N}(::Type{RArray}, x::Array{T, N}) = jr_cast(x)
+Base.convert{T<:ByteString, N}(::Type{RArray}, x::DataArray{T, N}) = jr_cast(x)
+Base.convert(::Type{RArray}, x::ByteString) = jr_cast(x)

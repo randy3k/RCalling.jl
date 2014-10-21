@@ -11,14 +11,14 @@ for t in (:(RArray{T, N}), :RList, :RFunction, :REnvironment, :RExpression, :RFu
 end
 
 # wrapper of julia objects
-function jr_wrap(x, own::Bool=true)
-    ptr = ccall(rsym(:jr_wrap), Ptr{Void}, (Ptr{Void}, Bool), pointer_from_objref(x), own)
+function jr_cast(x, own::Bool=true)
+    ptr = ccall(rsym(:jr_cast), Ptr{Void}, (Ptr{Void}, Bool), pointer_from_objref(x), own)
     _factory(ptr)
 end
 
 # wrapper of julia objects
-function rj_wrap(x::RAny)
-    ptr = ccall(rsym(:rj_wrap), Ptr{Any}, (Ptr{Void},), x.ptr)
+function rj_cast(x::RAny)
+    ptr = ccall(rsym(:rj_cast), Ptr{Any}, (Ptr{Void},), x.ptr)
     unsafe_pointer_to_objref(ptr)
 end
 
@@ -93,7 +93,7 @@ function attr(s::RAny, name::ASCIIString)
 end
 
 function class(s::RAny)
-    class_fun = rget("class", GlobalEnv())
+    class_fun = rget("class", GlobalEnv)
     Base.convert(Array, rcall(class_fun, Any[s]))
 end
 

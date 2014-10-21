@@ -5,8 +5,8 @@
 #include <R_ext/Parse.h>
 #include <julia.h>
 
-extern SEXP jr_wrap(jl_value_t *tt, int preserve);
-extern jl_value_t *rj_wrap(SEXP ss);
+extern SEXP jr_cast(jl_value_t *tt, int preserve);
+extern jl_value_t *rj_cast(SEXP ss);
 
 static SEXP do_julia(SEXP args)
 {
@@ -27,17 +27,17 @@ static SEXP do_julia(SEXP args)
     v = args;
     for (v = CDR(v), i = 0; v != R_NilValue; v = CDR(v), i++)
     {
-        jargs[i] = rj_wrap(CAR(v));
+        jargs[i] = rj_cast(CAR(v));
     }
     ans = jl_apply(func, jargs, count);
     JL_GC_POP();
 
     if (ans == NULL)
         return R_NilValue;
-    return jr_wrap(ans, 1);
+    return jr_cast(ans, 1);
 }
 
-void RCall_registerRoutines()
+void rcall_register_routines()
 {
     R_ExternalMethodDef externalMethods[] = {
         {".RCall", (DL_FUNC) &do_julia, -1},

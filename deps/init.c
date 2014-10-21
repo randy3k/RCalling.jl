@@ -6,12 +6,12 @@
 #include <julia.h>
 
 extern void R_ProcessEvents();
-extern void RCall_registerRoutines();
+extern void rcall_register_routines();
 extern int R_interrupts_pending;
 int R_is_ready = 0;
 int R_is_initialized = 0;
 
-int RCall_init()
+int rcall_init()
 {
     if (R_is_initialized == 1)
     {
@@ -26,13 +26,13 @@ int RCall_init()
       jl_error("R initialization failed.");
       return -1;
     }
-    RCall_registerRoutines();
+    rcall_register_routines();
     R_is_ready = 1;
     R_is_initialized = 1;
     return ret;
 }
 
-void RCall_ProcessEvents()
+void rcall_process_events()
 {
     if (!R_is_ready) return;
 

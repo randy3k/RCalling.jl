@@ -5,7 +5,7 @@
 #include <julia.h>
 
 
-SEXP RCall_parse(SEXP cmd)
+SEXP rcall_parse(SEXP cmd)
 {
     SEXP expr;
     ParseStatus status;
@@ -21,7 +21,7 @@ SEXP RCall_parse(SEXP cmd)
     return expr;
 }
 
-SEXP RCall_eval(SEXP e, SEXP env)
+SEXP rcall_eval(SEXP e, SEXP env)
 {
     int errorOccurred;
     int count = 0;

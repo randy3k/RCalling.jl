@@ -1,10 +1,16 @@
 # TODO: cache GlobalEnv
-function GlobalEnv()
-    _factory(ccall(rsym(:RCall_GlobalEnv), Ptr{Void}, ()))
+
+GlobalEnv = None
+BaseEnv = None
+
+function set_global_env()
+    global GlobalEnv
+    GlobalEnv =  _factory(ccall(rsym(:rcall_global_env), Ptr{Void}, ()))
 end
 
-function BaseEnv()
-    _factory(ccall(rsym(:RCall_BaseEnv), Ptr{Void}, ()))
+function set_base_env()
+    global BaseEnv
+    BaseEnv = _factory(ccall(rsym(:rcall_base_env), Ptr{Void}, ()))
 end
 
 function Base.getindex(x::REnvironment, i::ASCIIString)
@@ -13,29 +19,29 @@ function Base.getindex(x::REnvironment, i::ASCIIString)
 end
 
 function Base.keys(x::REnvironment)
-    ls = rget("ls", GlobalEnv())
+    ls = rget("ls", GlobalEnv)
     convert(Array, rcall(ls, Any[x]))
 end
 
 function rget(x::ASCIIString, env::REnvironment)
-    ptr = ccall(rsym(:RCall_findVar), Ptr{Void}, (Ptr{Uint8},Ptr{Void}), pointer(x.data), env.ptr)
+    ptr = ccall(rsym(:rcall_findVar), Ptr{Void}, (Ptr{Uint8},Ptr{Void}), pointer(x.data), env.ptr)
     obj = _factory(ptr)
     if rtypeof(obj) == 0
         error("Cannot get object.")
     end
     return obj
 end
-rget(x::ASCIIString) = rget(x, GlobalEnv())
+rget(x::ASCIIString) = rget(x, GlobalEnv)
 
 function rassign(name::ASCIIString, x::RAny, env::REnvironment)
-    assign_fun = rget("assign", GlobalEnv())
+    assign_fun = rget("assign", GlobalEnv)
     rcall(assign_fun, Any[convert(RArray, name), x, env], ["", "", "env"])
     nothing
 end
-rassign(name::ASCIIString, x::RAny) = rassign(name, x, GlobalEnv())
+rassign(name::ASCIIString, x::RAny) = rassign(name, x, GlobalEnv)
 
 function get_package(x::ASCIIString)
-    as_environment = rget("as.environment", GlobalEnv())
+    as_environment = rget("as.environment", GlobalEnv)
     rcall(as_environment, Any[convert(RArray, "package:$x")])
 end
 

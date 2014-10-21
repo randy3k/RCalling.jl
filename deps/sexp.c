@@ -3,7 +3,7 @@
 #include <Rinternals.h>
 #include <julia.h>
 
-extern jl_value_t *rj_wrap(SEXP ss);
+extern jl_value_t *rj_cast(SEXP ss);
 
 
 #define UTF8_MASK (1<<3)
@@ -94,7 +94,7 @@ jl_tuple_t *sexp_size(const SEXP s)
 jl_array_t *sexp_names(const SEXP s)
 {
     SEXP res = Rf_getAttrib(s, R_NamesSymbol);
-    return (jl_array_t *) rj_wrap(res);
+    return (jl_array_t *) rj_cast(res);
 }
 
 SEXP sexp_get_attr(const SEXP s, char *name)

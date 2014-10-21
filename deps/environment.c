@@ -5,17 +5,17 @@
 
 extern SEXP sexp_eval_promise(SEXP s);
 
-SEXP RCall_GlobalEnv()
+SEXP rcall_global_env()
 {
     return R_GlobalEnv;
 }
 
-SEXP RCall_BaseEnv()
+SEXP rcall_base_env()
 {
     return R_BaseEnv;
 }
 
-SEXP RCall_findVar(char *v, SEXP env)
+SEXP rcall_findVar(char *v, SEXP env)
 {
     SEXP fun;
     fun = PROTECT(Rf_findVar(Rf_install(v), env));

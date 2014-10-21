@@ -5,17 +5,17 @@ function rcall(f::RFunction, argv::Vector, argn::Vector{ASCIIString}, env::REnvi
     n::Int32 = length(argv)
     argv_p = map((x)->x.ptr, argv)
     argn_p = map((x)->pointer(x.data), argn)
-    ret = ccall(rsym(:RCall_call), Ptr{Void},
+    ret = ccall(rsym(:rcall_call), Ptr{Void},
                   (Ptr{Void}, Ptr{Ptr{Void}}, Int32, Ptr{Ptr{Uint8}}, Ptr{Void}),
                   f.ptr, argv_p, n, argn_p, env.ptr
     )
     _factory(ret)
 end
 
-rcall(f::RFunction, argv::Vector, argn::Vector{ASCIIString}) = rcall(f, argv, argn, GlobalEnv())
+rcall(f::RFunction, argv::Vector, argn::Vector{ASCIIString}) = rcall(f, argv, argn, GlobalEnv)
 rcall(f::RFunction, argv::Vector, env::REnvironment) = rcall(f, argv, ["" for i in 1:length(argv)], env)
-rcall(f::RFunction, argv::Vector) = rcall(f, argv, ["" for i in 1:length(argv)], GlobalEnv())
-rcall(f::RFunction) = rcall(f, [], ASCIIString[], GlobalEnv())
+rcall(f::RFunction, argv::Vector) = rcall(f, argv, ["" for i in 1:length(argv)], GlobalEnv)
+rcall(f::RFunction) = rcall(f, [], ASCIIString[], GlobalEnv)
 
 function Base.convert(::Type{Function}, f::RFunction)
     function fn(args...; kwargs...)

@@ -18,7 +18,7 @@ SEXP sexp_eval_promise(const SEXP s)
     return t;
 }
 
-SEXP RCall_call(SEXP fun_R, SEXP *argv, int argc, char **argn, SEXP env)
+SEXP rcall_call(SEXP fun_R, SEXP *argv, int argc, char **argn, SEXP env)
 {
 
     // make call

@@ -1,5 +1,5 @@
-# RList(x::DataFrame) = jr_wrap(x)
-# RList(x::Dict) = jr_wrap(x)
+# RList(x::DataFrame) = jr_cast(x)
+# RList(x::Dict) = jr_cast(x)
 
 # list getter
 
@@ -39,5 +39,5 @@ function Base.convert(::Type{Dict}, x::RList)
     ptr = ccall(rsym(:rj_list), Ptr{Any}, (Ptr{Void},), x.ptr)
     unsafe_pointer_to_objref(ptr)
 end
-Base.convert(::Type{RList}, x::DataFrame) = jr_wrap(x)
-Base.convert(::Type{RList}, x::Dict) = jr_wrap(x)
+Base.convert(::Type{RList}, x::DataFrame) = jr_cast(x)
+Base.convert(::Type{RList}, x::Dict) = jr_cast(x)
