@@ -9,7 +9,7 @@ extern jl_tuple_t *sexp_size(const SEXP s);
 extern jl_array_t *sexp_names(const SEXP s);
 jl_value_t *rj_cast(SEXP ss);
 
-static inline jl_array_t *rj_ptr_to_array(jl_datatype_t *type, void* data, jl_tuple_t *dims)
+static inline jl_array_t *ptr_to_array(jl_datatype_t *type, void* data, jl_tuple_t *dims)
 {
   return jl_ptr_to_array(jl_apply_array_type(type, jl_tuple_len(dims)), data, dims, 0);
 }
@@ -209,7 +209,7 @@ jl_value_t *rj_pooled_data_array(SEXP ss)
         // FIXME: remove ss levels
         tt = (jl_value_t *) rj_data_array(ss);
     else
-        tt = (jl_value_t *) rj_ptr_to_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
+        tt = (jl_value_t *) ptr_to_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
     JL_GC_PUSH2(&tt, &labels);
     jl_value_t *index = jl_call1(jl_eval_string("DataArrays.RefArray"), tt) ;
     ret = jl_call2(jl_get_function(jl_current_module, "PooledDataArray"), index, labels);

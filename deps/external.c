@@ -2,10 +2,9 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
-#include <R_ext/Parse.h>
 #include <julia.h>
 
-extern SEXP jr_cast(jl_value_t *tt, int preserve);
+extern SEXP jr_cast(jl_value_t *tt, int own);
 extern jl_value_t *rj_cast(SEXP ss);
 
 static SEXP do_julia(SEXP args)
