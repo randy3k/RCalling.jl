@@ -3,7 +3,6 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <julia.h>
-// some of the followings are adapted from https://github.com/armgong/RJulia/blob/master/src/R_Julia.c
 
 extern int sexp_is_ascii(SEXP ss);
 extern jl_tuple_t *sexp_size(const SEXP s);
@@ -80,6 +79,7 @@ static inline int r_isa(SEXP ss, const char *name)
     return 0;
 }
 
+// adapted from https://github.com/armgong/RJulia/blob/master/src/R_Julia.c
 jl_value_t *rj_array(SEXP ss)
 {
     jl_value_t *ret = JL_NULL;
@@ -204,7 +204,12 @@ jl_value_t *rj_pooled_data_array(SEXP ss)
         return ret;
     }
     jl_value_t *labels = rj_array(levels);
-    jl_value_t *tt = (jl_value_t *) rj_ptr_to_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
+    jl_value_t *tt;
+    if (array_has_na(ss))
+        // FIXME: remove ss levels
+        tt = (jl_value_t *) rj_data_array(ss);
+    else
+        tt = (jl_value_t *) rj_ptr_to_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
     JL_GC_PUSH2(&tt, &labels);
     jl_value_t *index = jl_call1(jl_eval_string("DataArrays.RefArray"), tt) ;
     ret = jl_call2(jl_get_function(jl_current_module, "PooledDataArray"), index, labels);
@@ -285,7 +290,6 @@ jl_value_t *rj_list(SEXP ss)
 
 jl_value_t *rj_cast(SEXP ss)
 {
-    // TODO: check na
     jl_value_t *ret = JL_NULL;
     if ((LENGTH(ss)) != 0)
     {

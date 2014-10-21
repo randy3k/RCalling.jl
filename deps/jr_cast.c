@@ -3,7 +3,6 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <julia.h>
-// mostly adapted from https://github.com/armgong/RJulia/blob/master/src/Julia_R.c
 
 SEXP jr_cast(jl_value_t *tt, bool own);
 
@@ -17,6 +16,7 @@ static inline bool jl_isa(jl_value_t* tt, char* type)
     return jl_subtype(tt, atype, 1);
 }
 
+// adapted from https://github.com/armgong/RJulia/blob/master/src/R_Julia.c
 SEXP jr_scalar(jl_value_t *tt)
 {
     SEXP ans = R_NilValue;
@@ -103,6 +103,7 @@ SEXP jr_scalar(jl_value_t *tt)
     return ans;
 }
 
+// adapted from https://github.com/armgong/RJulia/blob/master/src/R_Julia.c
 SEXP jr_array(jl_value_t *tt)
 {
     SEXP ans = R_NilValue;

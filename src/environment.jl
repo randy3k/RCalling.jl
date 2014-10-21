@@ -1,5 +1,3 @@
-# TODO: cache GlobalEnv
-
 GlobalEnv = None
 BaseEnv = None
 
