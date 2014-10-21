@@ -269,10 +269,6 @@ SEXP jr_array(jl_value_t *tt)
            SET_STRING_ELT(ans, i, Rf_mkChar(jl_string_data(jl_cellref(tt, i))));
        UNPROTECT(1);
     }
-    else{
-        jl_error("RCall does not know how to convert this Julia object.");
-    }
-
     return ans;
 }
 
@@ -406,7 +402,7 @@ SEXP jr_cast(jl_value_t *tt, bool own){
     JL_GC_POP();
     if (ans == R_NilValue)
     {
-        jl_error("RCall does not know how to convert this Julia object.");
+        jl_error("invaild object");
     }
     if (own)
         // TODO: possible to use other methods to protect ans? Preserve and Release

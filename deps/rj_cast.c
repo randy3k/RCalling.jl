@@ -86,7 +86,7 @@ jl_value_t *rj_array(SEXP ss)
     SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
     if (levels != R_NilValue)
     {
-        jl_error("Convert to PooledDataArray instead.");
+        jl_error("Convert to PooledDataArray instead");
         return ret;
     }
     jl_tuple_t *dims = sexp_size(ss);
@@ -143,7 +143,7 @@ jl_value_t *rj_array(SEXP ss)
             break;
         }
         default:
-            jl_error("RCall does not know how to convert this R object.");
+            jl_error("invaild object");
     }
     return ret;
 }
@@ -184,6 +184,8 @@ static inline jl_value_t *rj_array_uncheck(SEXP ss)
     JL_GC_POP();
     jl_function_t *func = jl_get_function(jl_current_module, "DataArray");
     jl_value_t *ret = jl_call2(func, (jl_value_t *) rj_array(ss), (jl_value_t *) na);
+    if (ret == NULL)
+        jl_error("conversion error")
     return ret;
 }
 
@@ -192,7 +194,7 @@ jl_value_t *rj_data_array(SEXP ss)
     SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
     if (levels != R_NilValue)
     {
-        jl_error("Convert to PooledDataArray instead.");
+        jl_error("convert to PooledDataArray instead");
         return JL_NULL;
     }
     return rj_array_uncheck(ss);
@@ -205,7 +207,7 @@ jl_value_t *rj_pooled_data_array(SEXP ss)
     SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
     if (levels == R_NilValue)
     {
-        jl_error("Expect factor array.");
+        jl_error("expect factor array");
         return ret;
     }
     jl_value_t *labels = rj_array_uncheck(levels);
@@ -217,6 +219,8 @@ jl_value_t *rj_pooled_data_array(SEXP ss)
     JL_GC_PUSH2(&tt, &labels);
     jl_value_t *index = jl_call1(jl_eval_string("DataArrays.RefArray"), tt) ;
     ret = jl_call2(jl_get_function(jl_current_module, "PooledDataArray"), index, labels);
+    if (ret == NULL)
+        jl_error("conversion error")
     JL_GC_POP();
     return ret;
 }
@@ -224,40 +228,55 @@ jl_value_t *rj_pooled_data_array(SEXP ss)
 jl_value_t *rj_data_frame(SEXP ss)
 {
     jl_value_t *ret = JL_NULL;
-    if (TYPEOF(ss) == VECSXP)
+    if (TYPEOF(ss) != VECSXP)
+        jl_error("expect a list object");
+
+    size_t n = LENGTH(ss);
+    if (n==0)
+        return JL_NULL;
+    int elem_n = LENGTH(VECTOR_ELT(ss, 0));
+    if (n>1)
     {
-        SEXP rownames = PROTECT(Rf_getAttrib(ss, R_RowNamesSymbol));
-        int align = 0;
-        if (TYPEOF(rownames) == STRSXP)
-            align = 1;
-        size_t n = LENGTH(ss);
-        jl_array_t *columns = new_array(jl_any_type, jl_tuple1(jl_box_long(n+align)));
-        jl_array_t *names = sexp_names(ss);
-        jl_array_t *sym = new_array(jl_symbol_type, jl_tuple1(jl_box_long(n+align)));
-        JL_GC_PUSH4(&columns, &names, &sym, &ret);
-
-        if (align)
-        // if row names are string
+        for(size_t i=1; i<n; i++)
         {
-            jl_arrayset(columns, rj_array(rownames), 0);
-            jl_arrayset(sym, (jl_value_t *) jl_symbol("RowID"), 0);
+            if (LENGTH(VECTOR_ELT(ss, i)) != elem_n)
+                jl_error("elements are not of the same length");
         }
-        SEXP ssi;
-        for (int i = 0; i < n; i++)
-        {
-            ssi = VECTOR_ELT(ss, i);
-            if (Rf_getAttrib(ssi, R_LevelsSymbol) == R_NilValue)
-                jl_arrayset(columns, rj_data_array(ssi), i+align);
-            else
-                jl_arrayset(columns, rj_pooled_data_array(ssi), i+align);
-
-            jl_arrayset(sym, (jl_value_t *) jl_symbol(jl_string_data(jl_arrayref(names, i))), i+align);
-        }
-        jl_function_t *func = jl_get_function(jl_current_module, "DataFrame");
-        ret = jl_call2(func, (jl_value_t *) columns, (jl_value_t *) sym);
-        UNPROTECT(1);
-        JL_GC_POP();
     }
+    SEXP rownames = Rf_getAttrib(ss, R_RowNamesSymbol);
+    if (rownames != R_NilValue)
+        PROTECT(rownames);
+    int align = 0;
+    if (rownames != R_NilValue && TYPEOF(rownames) == STRSXP)
+        align = 1;
+    jl_array_t *columns = new_array(jl_any_type, jl_tuple1(jl_box_long(n+align)));
+    jl_array_t *names = sexp_names(ss);
+    jl_array_t *sym = new_array(jl_symbol_type, jl_tuple1(jl_box_long(n+align)));
+    JL_GC_PUSH4(&columns, &names, &sym, &ret);
+    if (align)
+    // if row names are string
+    {
+        jl_arrayset(columns, rj_array(rownames), 0);
+        jl_arrayset(sym, (jl_value_t *) jl_symbol("RowID"), 0);
+    }
+    if (rownames != R_NilValue)
+        UNPROTECT(1);
+
+    SEXP ssi;
+    for (size_t i = 0; i < n; i++)
+    {
+        ssi = VECTOR_ELT(ss, i);
+        if (Rf_getAttrib(ssi, R_LevelsSymbol) == R_NilValue)
+            jl_arrayset(columns, rj_data_array(ssi), i+align);
+        else
+            jl_arrayset(columns, rj_pooled_data_array(ssi), i+align);
+
+        jl_arrayset(sym, (jl_value_t *) jl_symbol(jl_string_data(jl_arrayref(names, i))), i+align);
+    }
+    ret = jl_call2(jl_get_function(jl_current_module, "DataFrame"), (jl_value_t *) columns, (jl_value_t *) sym);
+    if (ret == NULL)
+        jl_error("conversion error")
+    JL_GC_POP();
     return ret;
 }
 
@@ -287,6 +306,8 @@ jl_value_t *rj_list(SEXP ss)
     }
     jl_function_t *func = jl_get_function(jl_base_module, "Dict");
     ret = jl_call1(func, ret);
+    if (ret == NULL)
+        jl_error("conversion error")
     JL_GC_POP();
     return ret;
 }
@@ -319,7 +340,7 @@ jl_value_t *rj_cast(SEXP ss)
         }
         else
         {
-            jl_error("RCall does not know how to convert this R object.");
+            jl_error("invaild object");
             ret = JL_NULL;
         }
     }
