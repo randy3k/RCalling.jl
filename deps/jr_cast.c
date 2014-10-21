@@ -273,7 +273,7 @@ SEXP jr_array(jl_value_t *tt)
         jl_error("RCall does not know how to convert this Julia object.");
     }
 
-    return ans;g
+    return ans;
 }
 
 SEXP jr_range(jl_value_t *tt) {
@@ -409,6 +409,7 @@ SEXP jr_cast(jl_value_t *tt, bool own){
         jl_error("RCall does not know how to convert this Julia object.");
     }
     if (own)
+        // TODO: possible to use other methods to protect ans? Preserve and Release
         R_PreserveObject(ans);
     return ans;
 }
