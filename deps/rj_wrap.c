@@ -53,7 +53,7 @@ jl_value_t *rj_data_array(SEXP ss)
 {
     jl_value_t *ret = JL_NULL;
     size_t n = LENGTH(ss);
-    jl_array_t *na = new_array(jl_bool_type, jl_tuple1(jl_box_int64(n)));
+    jl_array_t *na = new_array(jl_bool_type, jl_tuple1(jl_box_long(n)));
     JL_GC_PUSH2(&na, &ret);
 
     int ty = TYPEOF(ss);
@@ -110,9 +110,9 @@ jl_value_t *rj_data_frame(SEXP ss)
         if (TYPEOF(rownames) == STRSXP)
             align = 1;
         size_t n = LENGTH(ss);
-        jl_array_t *columns = new_array(jl_any_type, jl_tuple1(jl_box_int64(n+align)));
+        jl_array_t *columns = new_array(jl_any_type, jl_tuple1(jl_box_long(n+align)));
         jl_array_t *names = sexp_names(ss);
-        jl_array_t *sym = new_array(jl_symbol_type, jl_tuple1(jl_box_int64(n+align)));
+        jl_array_t *sym = new_array(jl_symbol_type, jl_tuple1(jl_box_long(n+align)));
         JL_GC_PUSH4(&columns, &names, &sym, &ret);
 
         if (align)
@@ -139,7 +139,7 @@ jl_value_t *rj_list(SEXP ss)
     jl_value_t *ret;
     size_t n = LENGTH(ss);
     jl_datatype_t *ttype = (jl_datatype_t *) jl_eval_string("(Any, Any)");
-    ret = (jl_value_t *) new_array(ttype, jl_tuple1(jl_box_int64(n)));
+    ret = (jl_value_t *) new_array(ttype, jl_tuple1(jl_box_long(n)));
     JL_GC_PUSH1(&ret);
     if (is_named(ss))
     {
@@ -155,7 +155,7 @@ jl_value_t *rj_list(SEXP ss)
         for (int i = 0; i < n; i++)
         {
             jl_arrayset((jl_array_t *) ret,
-                (jl_value_t *) jl_tuple2(jl_box_int64(i+1), rj_wrap(VECTOR_ELT(ss, i))), i);
+                (jl_value_t *) jl_tuple2(jl_box_long(i+1), rj_wrap(VECTOR_ELT(ss, i))), i);
         }
     }
     jl_function_t *func = jl_get_function(jl_base_module, "Dict");

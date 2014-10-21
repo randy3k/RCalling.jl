@@ -294,7 +294,7 @@ SEXP jr_data_array(jl_value_t *tt) {
     ans = jr_array(u);
     int ty = TYPEOF(ans);
     for(size_t i=0; i<len; i++){
-        if (jl_unbox_bool(jl_call2(func, v, jl_box_int64((int64_t) i+1)))){
+        if (jl_unbox_bool(jl_call2(func, v, jl_box_long(i+1)))){
             switch(ty) {
               case LGLSXP:
                 LOGICAL(ans)[i] = NA_LOGICAL;

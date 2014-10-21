@@ -18,10 +18,18 @@ int sexp_mark(SEXP ss)
 
 int sexp_is_ascii(SEXP ss)
 {
+    if (TYPEOF(ss) != STRSXP)
+        jl_error("Expect string object.");
     size_t n = LENGTH(ss);
+    SEXP t;
     for (size_t i=0; i<n; i++)
+    {
+        t = STRING_ELT(ss, i);
+        if (t == NA_STRING)
+            continue;
         if (! IS_ASCII(STRING_ELT(ss, i)))
             return 0;
+    }
     return 1;
 }
 
