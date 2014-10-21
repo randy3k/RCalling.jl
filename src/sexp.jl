@@ -75,6 +75,10 @@ function named(s::RAny)
     ccall(rsym(:sexp_named), Int, (Ptr{Void},), s.ptr)
 end
 
+function marked(s::RAny)
+    ccall(RCall.rsym(:sexp_mark), Int, (Ptr{Void},), s.ptr)
+end
+
 function rtypeof(s::RAny)
     ccall(rsym(:sexp_typeof), Int, (Ptr{Void},), s.ptr)
 end
@@ -94,20 +98,6 @@ function class(s::RAny)
 end
 
 
-# RAny factory constructor
-
-
-# frome Rinternals.h
-const NILSXP   = 0;  const SYMSXP     = 1;  const LISTSXP    = 2;
-const CLOSXP   = 3;  const ENVSXP     = 4;  const PROMSXP    = 5;
-const LANGSXP  = 6;  const SPECIALSXP = 7;  const BUILTINSXP = 8;
-const LGLSXP   = 10; const INTSXP     = 13; const REALSXP    = 14;
-const CPLXSXP  = 15; const STRSXP     = 16; const DOTSXP     = 17;
-const ANYSXP   = 18; const VECSXP     = 19; const EXPRSXP    = 20;
-const BCODESXP = 21; const EXTPTRSXP  = 22; const WEAKREFSXP = 23;
-const RAWSXP   = 24; const S4SXP      = 25; const FUNSXP     = 99;
-
-# reverse map
 const SexpType = Dict([
     (0, :NILSXP),   (1, :SYMSXP),     (2, :LISTSXP),
     (3, :CLOSXP),   (4, :ENVSXP),     (5, :PROMSXP),
@@ -120,13 +110,10 @@ const SexpType = Dict([
 ])
 
 
-# TODO: UTF8String should be something ASCIIString
-
 const SexpType_to_JType = Dict([
-    (LGLSXP, Bool),
-    (INTSXP, Int32),
-    (REALSXP, Float64),
-    (STRSXP, UTF8String)
+    (:LGLSXP, Bool),
+    (:INTSXP, Int32),
+    (:REALSXP, Float64)
 ])
 
 function release_object(s::RAny)
@@ -137,23 +124,32 @@ function _factory(ptr::Ptr{Void}, own::Bool=true)
     if ptr == C_NULL
         return None
     end
-    t = ccall(rsym(:sexp_typeof), Int32, (Ptr{Void},), ptr)
+    t = SexpType[ccall(rsym(:sexp_typeof), Int32, (Ptr{Void},), ptr)]
 
-    if t in (LGLSXP, INTSXP, REALSXP, STRSXP)
+    if t in (:LGLSXP, :INTSXP, :REALSXP, :STRSXP)
         N = ccall(rsym(:sexp_ndims), Int, (Ptr{Void},), ptr)
-        T = SexpType_to_JType[t]
+
+        if t == :STRSXP
+            if is_ascii(ptr) == 1
+                T = ASCIIString
+            else
+                T = UTF8String
+            end
+        else
+            T = SexpType_to_JType[t]
+        end
         obj = RArray{T, N}(ptr)
-    elseif t == VECSXP
+    elseif t == :VECSXP
         obj = RList(ptr)
-    elseif t in (CLOSXP, BUILTINSXP, SPECIALSXP)
+    elseif t in (:CLOSXP, :BUILTINSXP, :SPECIALSXP)
         obj = RFunction(ptr)
-    elseif t == ENVSXP
+    elseif t == :ENVSXP
         obj = REnvironment(ptr)
-    elseif t == EXPRSXP
+    elseif t == :EXPRSXP
         obj = RExpression(ptr)
-    elseif t == LANGSXP
+    elseif t == :LANGSXP
         obj = RFunctionCall(ptr)
-    elseif t == NILSXP
+    elseif t == :NILSXP
         return RNull(ptr)
     else
         obj = RObject(ptr)

@@ -11,6 +11,11 @@ extern jl_value_t *rj_wrap(SEXP ss);
 #define IS_ASCII(x) (ENVFLAGS(x) & ASCII_MASK)
 #define IS_UTF8(x) (ENVFLAGS(x) & UTF8_MASK)
 
+int sexp_mark(SEXP ss)
+{
+    return MARK(ss);
+}
+
 int sexp_is_ascii(SEXP ss)
 {
     size_t n = LENGTH(ss);

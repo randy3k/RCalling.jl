@@ -1,7 +1,7 @@
 module RCall
 
-using Reexport
-@reexport using DataFrames
+using DataFrames: DataFrame, DataArray, PooledDataArray
+export DataFrame, DataArray, PooledDataArray
 
 # R objects
 export RAny, RArray, RList, RFunction, REnvironment, RExpression, RFunctionCall, RObject, RNull
@@ -33,6 +33,8 @@ include("environment.jl")
 include("expression.jl")
 
 include("array.jl")
+
+include("string.jl")
 
 include("list.jl")
 
