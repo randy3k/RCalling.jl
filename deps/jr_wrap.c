@@ -136,7 +136,7 @@ SEXP jr_array(jl_value_t *tt)
     else if (jl_is_int32(val))
     {
          int32_t *p = (int32_t *) jl_array_data(tt);
-         PROTECT(ans = Rf_allocArray(INTSXP, dims));\
+         PROTECT(ans = Rf_allocArray(INTSXP, dims));
          for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
          UNPROTECT(1);
     }
@@ -176,28 +176,28 @@ SEXP jr_array(jl_value_t *tt)
     else if (jl_is_int8(val))
     {
         int8_t *p = (int8_t *) jl_array_data(tt);
-        PROTECT(ans = Rf_allocArray(INTSXP, dims));\
+        PROTECT(ans = Rf_allocArray(INTSXP, dims));
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
     else if (jl_is_uint8(val))
     {
         uint8_t *p = (uint8_t *) jl_array_data(tt);
-        PROTECT(ans = Rf_allocArray(INTSXP, dims));\
+        PROTECT(ans = Rf_allocArray(INTSXP, dims));
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
     else if (jl_is_int16(val))
     {
         int16_t *p = (int16_t *) jl_array_data(tt);
-        PROTECT(ans = Rf_allocArray(INTSXP, dims));\
+        PROTECT(ans = Rf_allocArray(INTSXP, dims));
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
     else if (jl_is_uint16(val))
     {
         uint16_t *p = (uint16_t *) jl_array_data(tt);
-        PROTECT(ans = Rf_allocArray(INTSXP, dims));\
+        PROTECT(ans = Rf_allocArray(INTSXP, dims));
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
