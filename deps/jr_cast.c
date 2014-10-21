@@ -107,41 +107,35 @@ SEXP jr_scalar(jl_value_t *tt)
 SEXP jr_array(jl_value_t *tt)
 {
     SEXP ans = R_NilValue;
-    jl_value_t *val;
-    if (((jl_array_t *)tt)->ptrarray)
-        val = jl_cellref(tt, 0);
-    else
-        val = jl_arrayref((jl_array_t *)tt, 0);
     //get Julia dims and set R array Dims
-    size_t len = jl_array_len(tt);
+    int len = jl_array_len(tt);
     if (len == 0)
         return ans;
 
+    jl_datatype_t *ty = jl_array_eltype(tt);
     int ndims = jl_array_ndims(tt);
     SEXP dims;
     PROTECT(dims = Rf_allocVector(INTSXP, ndims));
     for (size_t i = 0; i < ndims; i++)
-    {
         INTEGER(dims)[i] = jl_array_dim(tt, i);
-    }
     UNPROTECT(1);
 
     // again, float64, int32 and int64 are most common
-    if (jl_is_float64(val))
+    if (ty == jl_float64_type)
     {
             double *p = (double *) jl_array_data(tt);
             PROTECT(ans = Rf_allocArray(REALSXP, dims));
             for (size_t i = 0; i < len; i++) REAL(ans)[i] = p[i];
             UNPROTECT(1);;
     }
-    else if (jl_is_int32(val))
+    else if (ty == jl_int32_type)
     {
          int32_t *p = (int32_t *) jl_array_data(tt);
          PROTECT(ans = Rf_allocArray(INTSXP, dims));
          for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
          UNPROTECT(1);
     }
-    else if (jl_is_int64(val))
+    else if (ty == jl_int64_type)
     {
         int is_int32 = 1;
         int64_t *p = (int64_t *) jl_array_data(tt);
@@ -166,7 +160,7 @@ SEXP jr_array(jl_value_t *tt)
             UNPROTECT(1);
         }
     }
-    else if (jl_is_bool(val))
+    else if (ty == jl_bool_type)
     {
         bool *p = (bool *) jl_array_data(tt);
         PROTECT(ans = Rf_allocArray(LGLSXP, dims));
@@ -174,35 +168,35 @@ SEXP jr_array(jl_value_t *tt)
            LOGICAL(ans)[i] = p[i];
         UNPROTECT(1);
     }
-    else if (jl_is_int8(val))
+    else if (ty == jl_int8_type)
     {
         int8_t *p = (int8_t *) jl_array_data(tt);
         PROTECT(ans = Rf_allocArray(INTSXP, dims));
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
-    else if (jl_is_uint8(val))
+    else if (ty == jl_uint8_type)
     {
         uint8_t *p = (uint8_t *) jl_array_data(tt);
         PROTECT(ans = Rf_allocArray(INTSXP, dims));
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
-    else if (jl_is_int16(val))
+    else if (ty == jl_int16_type)
     {
         int16_t *p = (int16_t *) jl_array_data(tt);
         PROTECT(ans = Rf_allocArray(INTSXP, dims));
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
-    else if (jl_is_uint16(val))
+    else if (ty == jl_uint16_type)
     {
         uint16_t *p = (uint16_t *) jl_array_data(tt);
         PROTECT(ans = Rf_allocArray(INTSXP, dims));
         for (size_t i = 0; i < len; i++) INTEGER(ans)[i] = p[i];
         UNPROTECT(1);
     }
-    else if (jl_is_uint32(val))
+    else if (ty == jl_uint32_type)
     {
         int is_int32 = 1;
         uint32_t *p = (uint32_t *) jl_array_data(tt);
@@ -227,7 +221,7 @@ SEXP jr_array(jl_value_t *tt)
             UNPROTECT(1);
         }
     }
-    else if (jl_is_uint64(val))
+    else if (ty == jl_uint64_type)
     {
         int is_int32 = 1;
         uint64_t *p = (uint64_t *) jl_array_data(tt);
@@ -253,7 +247,7 @@ SEXP jr_array(jl_value_t *tt)
         }
     }
     //double
-    else if (jl_is_float32(val))
+    else if (ty == jl_float32_type)
     {
         float *p = (float *) jl_array_data(tt);
         PROTECT(ans = Rf_allocArray(REALSXP, dims));
@@ -261,14 +255,14 @@ SEXP jr_array(jl_value_t *tt)
         UNPROTECT(1);;
     }
     //utf8 string
-    else if (jl_is_utf8_string(val))
+    else if (ty == jl_utf8_string_type)
     {
         PROTECT(ans = Rf_allocArray(STRSXP, dims));
         for (size_t i = 0; i < len; i++)
            SET_STRING_ELT(ans, i, Rf_mkCharCE(jl_string_data(jl_cellref(tt, i)), CE_UTF8));
        UNPROTECT(1);
     }
-    else if (jl_is_ascii_string(val))
+    else if (ty == jl_ascii_string_type)
     {
         PROTECT(ans = Rf_allocArray(STRSXP, dims));
         for (size_t i = 0; i < len; i++)
