@@ -185,7 +185,7 @@ static inline jl_value_t *rj_array_uncheck(SEXP ss)
     jl_function_t *func = jl_get_function(jl_current_module, "DataArray");
     jl_value_t *ret = jl_call2(func, (jl_value_t *) rj_array(ss), (jl_value_t *) na);
     if (ret == NULL)
-        jl_error("conversion error")
+        jl_error("conversion error");
     return ret;
 }
 
@@ -220,7 +220,7 @@ jl_value_t *rj_pooled_data_array(SEXP ss)
     jl_value_t *index = jl_call1(jl_eval_string("DataArrays.RefArray"), tt) ;
     ret = jl_call2(jl_get_function(jl_current_module, "PooledDataArray"), index, labels);
     if (ret == NULL)
-        jl_error("conversion error")
+        jl_error("conversion error");
     JL_GC_POP();
     return ret;
 }
@@ -275,7 +275,7 @@ jl_value_t *rj_data_frame(SEXP ss)
     }
     ret = jl_call2(jl_get_function(jl_current_module, "DataFrame"), (jl_value_t *) columns, (jl_value_t *) sym);
     if (ret == NULL)
-        jl_error("conversion error")
+        jl_error("conversion error");
     JL_GC_POP();
     return ret;
 }
@@ -307,7 +307,7 @@ jl_value_t *rj_list(SEXP ss)
     jl_function_t *func = jl_get_function(jl_base_module, "Dict");
     ret = jl_call1(func, ret);
     if (ret == NULL)
-        jl_error("conversion error")
+        jl_error("conversion error");
     JL_GC_POP();
     return ret;
 }
