@@ -89,7 +89,8 @@ jl_value_t *rj_data_array(SEXP ss)
 }
 
 
-jl_value_t *rj_pooled_data_array(SEXP ss){
+jl_value_t *rj_pooled_data_array(SEXP ss)
+{
     jl_value_t *ret = JL_NULL;
     jl_value_t *levels = rj_wrap(Rf_getAttrib(ss, R_LevelsSymbol));
     jl_value_t *tt = (jl_value_t *) rj_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
