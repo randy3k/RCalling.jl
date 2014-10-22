@@ -94,6 +94,8 @@ jl_tuple_t *sexp_size(const SEXP s)
 jl_array_t *sexp_names(const SEXP s)
 {
     SEXP res = Rf_getAttrib(s, R_NamesSymbol);
+    if (res == R_NilValue)
+        return JL_NULL;
     return (jl_array_t *) rj_cast(res);
 }
 

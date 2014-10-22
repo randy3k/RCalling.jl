@@ -268,6 +268,8 @@ jl_value_t *rj_data_frame(SEXP ss)
         align = 1;
     jl_array_t *columns = new_array(jl_any_type, jl_tuple1(jl_box_long(n+align)));
     jl_array_t *names = sexp_names(ss);
+    if (jl_is_null(names))
+        jl_error("missing variable names");
     jl_array_t *sym = new_array(jl_symbol_type, jl_tuple1(jl_box_long(n+align)));
     JL_GC_PUSH4(&columns, &names, &sym, &ret);
     if (align)
