@@ -31,16 +31,15 @@ function rprint(io::IO, s::RAny)
         return
     end
     # TODO: redirect rprint
-    # oldout = STDOUT
-    # (rd,wr) = redirect_stdout()
-    # start_reading(rd)
+    oldout = STDOUT
+    (rd,wr) = redirect_stdout()
+    start_reading(rd)
     ccall(rsym(:sexp_print), Void, (Ptr{Void},), s.ptr)
-    # flush_cstdio()
-    # yield()
-    # redirect_stdout(oldout)
-    # if nb_available(rd)>0
-    #     print(io, rstrip(readavailable(rd)))
-    # end
+    flush_cstdio()
+    redirect_stdout(oldout)
+    close(wr)
+    print(io, rstrip(readall(rd)))
+    close(rd)
     nothing
 end
 rprint(s::RAny) = rprint(STDOUT, s)

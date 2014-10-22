@@ -4,6 +4,8 @@ function init()
     ret = ccall(rsym(:rcall_init), Int32, ())
     set_global_env()
     set_base_env()
+    # https://github.com/JuliaLang/julia/issues/8765
+    ccall(rsym(:fixstdio), Int32, ())
     return ret
 end
 
