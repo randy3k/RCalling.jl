@@ -28,9 +28,16 @@ end
 # convertor
 
 # r to j
-Base.convert{T<:ByteString, N}(::Type{Array}, x::RArray{T,N}) = rj_cast(x)
+function Base.convert{T<:ByteString, N}(::Type{Array}, x::RArray{T, N})
+	ptr = ccall(rsym(:rj_array), Ptr{Any}, (Ptr{Void},), x.ptr)
+	unsafe_pointer_to_objref(ptr)
+end
 function Base.convert{T<:ByteString, N}(::Type{DataArray}, x::RArray{T, N})
 	ptr = ccall(rsym(:rj_data_array), Ptr{Any}, (Ptr{Void},), x.ptr)
+	unsafe_pointer_to_objref(ptr)
+end
+function Base.convert{T<:ByteString, N}(::Type{PooledDataArray}, x::RArray{T, N})
+	ptr = ccall(rsym(:rj_pooled_data_array), Ptr{Any}, (Ptr{Void},), x.ptr)
 	unsafe_pointer_to_objref(ptr)
 end
 
