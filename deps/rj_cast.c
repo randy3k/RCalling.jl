@@ -69,7 +69,40 @@ static inline int array_has_na(SEXP ss)
     return 0;
 }
 
+static inline jl_array_t *array_is_na(SEXP ss){
+    size_t n = LENGTH(ss);
+    jl_array_t *na = new_array(jl_bool_type, jl_tuple1(jl_box_long(n)));
+    JL_GC_PUSH1(&na);
 
+    int ty = TYPEOF(ss);
+    int isna = 0;
+    for(size_t i=0; i<n; i++)
+    {
+        isna = 0;
+        switch(ty) {
+          case LGLSXP:
+            isna = (LOGICAL(ss)[i] == NA_LOGICAL);
+            break;
+          case INTSXP:
+            isna = (INTEGER(ss)[i] == NA_INTEGER);
+            break;
+          case REALSXP:
+            isna = ISNAN(REAL(ss)[i]);
+            break;
+          case STRSXP:
+            isna = (STRING_ELT(ss, i) == NA_STRING);
+            break;
+          default:
+            isna = 0;
+        }
+        if (isna)
+            jl_arrayset(na, jl_true, i);
+        else
+            jl_arrayset(na, jl_false, i);
+    }
+    JL_GC_POP();
+    return na;
+}
 
 static inline int r_isa(SEXP ss, const char *name)
 {
@@ -80,15 +113,9 @@ static inline int r_isa(SEXP ss, const char *name)
 }
 
 // adapted from https://github.com/armgong/RJulia/blob/master/src/R_Julia.c
-jl_value_t *rj_array(SEXP ss)
+jl_value_t *rj_array_uncheck(SEXP ss)
 {
     jl_value_t *ret = JL_NULL;
-    SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
-    if (levels != R_NilValue)
-    {
-        jl_error("Convert to PooledDataArray instead");
-        return ret;
-    }
     jl_tuple_t *dims = sexp_size(ss);
     switch (TYPEOF(ss))
     {
@@ -143,56 +170,15 @@ jl_value_t *rj_array(SEXP ss)
             break;
         }
         default:
-            jl_error("invaild object");
+            jl_error("expect array type");
     }
     return ret;
 }
 
 
-static inline jl_value_t *rj_array_uncheck(SEXP ss)
+jl_value_t *rj_array(SEXP ss)
 {
-    size_t n = LENGTH(ss);
-    jl_array_t *na = new_array(jl_bool_type, jl_tuple1(jl_box_long(n)));
-    JL_GC_PUSH1(&na);
-
-    int ty = TYPEOF(ss);
-    int isna = 0;
-    for(size_t i=0; i<n; i++)
-    {
-        isna = 0;
-        switch(ty) {
-          case LGLSXP:
-            isna = (LOGICAL(ss)[i] == NA_LOGICAL);
-            break;
-          case INTSXP:
-            isna = (INTEGER(ss)[i] == NA_INTEGER);
-            break;
-          case REALSXP:
-            isna = ISNAN(REAL(ss)[i]);
-            break;
-          case STRSXP:
-            isna = (STRING_ELT(ss, i) == NA_STRING);
-            break;
-          default:
-            isna = 0;
-        }
-        if (isna)
-            jl_arrayset(na, jl_true, i);
-        else
-            jl_arrayset(na, jl_false, i);
-    }
-    JL_GC_POP();
-    jl_function_t *func = jl_get_function(jl_current_module, "DataArray");
-    jl_value_t *ret = jl_call2(func, (jl_value_t *) rj_array(ss), (jl_value_t *) na);
-    if (ret == NULL)
-        jl_error("conversion error");
-    return ret;
-}
-
-jl_value_t *rj_data_array(SEXP ss)
-{
-    SEXP levels = Rf_getAttrib(ss, R_LevelsSymbol);
-    if (levels != R_NilValue)
+    if (Rf_getAttrib(ss, R_LevelsSymbol) != R_NilValue)
     {
         jl_error("convert to PooledDataArray instead");
         return JL_NULL;
@@ -200,6 +186,31 @@ jl_value_t *rj_data_array(SEXP ss)
     return rj_array_uncheck(ss);
 }
 
+jl_value_t *rj_data_array(SEXP ss)
+{
+    if (Rf_getAttrib(ss, R_LevelsSymbol) != R_NilValue)
+    {
+        jl_error("convert to PooledDataArray instead");
+        return JL_NULL;
+    }
+    jl_array_t *na = array_is_na(ss);
+    jl_function_t *func = jl_get_function(jl_current_module, "DataArray");
+    JL_GC_PUSH2(&na, &func);
+    jl_value_t *ret = jl_call2(func, (jl_value_t *) rj_array_uncheck(ss), (jl_value_t *) na);
+    if (ret == NULL)
+        jl_error("conversion error");
+    JL_GC_POP();
+    return ret;
+}
+
+
+static inline void pda_set_na(jl_value_t* ret, jl_value_t* is_na)
+{
+    jl_function_t *setindex = jl_get_function(jl_current_module, "setindex!");
+    JL_GC_PUSH2(&ret, &is_na);
+    jl_call3(setindex, ret, jl_eval_string("DataArrays.NA"), is_na);
+    JL_GC_POP();
+}
 
 jl_value_t *rj_pooled_data_array(SEXP ss)
 {
@@ -210,21 +221,27 @@ jl_value_t *rj_pooled_data_array(SEXP ss)
         jl_error("expect factor array");
         return ret;
     }
-    jl_value_t *labels = rj_array_uncheck(levels);
-    jl_value_t *tt;
-    if (array_has_na(ss))
-        tt = (jl_value_t *) rj_array_uncheck(ss);
-    else
-        tt = (jl_value_t *) ptr_to_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
-    JL_GC_PUSH2(&tt, &labels);
-    jl_value_t *index = jl_call1(jl_eval_string("DataArrays.RefArray"), tt) ;
+
+    jl_value_t *tt, *index, *labels;
+    JL_GC_PUSH3(&tt, &index, &labels);
+    tt = (jl_value_t *) ptr_to_array(jl_int32_type, INTEGER(ss), sexp_size(ss));
+    index = jl_call1(jl_eval_string("DataArrays.RefArray"), tt) ;
+    labels = rj_array_uncheck(levels);
     ret = jl_call2(jl_get_function(jl_current_module, "PooledDataArray"), index, labels);
-    if (ret == NULL)
-        jl_error("conversion error");
     JL_GC_POP();
+
+    if (ret == NULL)
+        jl_error("PooledDataArray error");
+
+    if (array_has_na(ss))
+        pda_set_na(ret, (jl_value_t *) array_is_na(ss));
+
+    if (ret == NULL)
+        jl_error("PooledDataArray error");
     return ret;
 }
 
+// FIXME: convert(DataFrame, @R list(c("a","b","a")))
 jl_value_t *rj_data_frame(SEXP ss)
 {
     jl_value_t *ret = JL_NULL;
