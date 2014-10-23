@@ -241,7 +241,6 @@ jl_value_t *rj_pooled_data_array(SEXP ss)
     return ret;
 }
 
-// FIXME: convert(DataFrame, @R list(c("a","b","a")))
 jl_value_t *rj_data_frame(SEXP ss)
 {
     jl_value_t *ret = JL_NULL;
