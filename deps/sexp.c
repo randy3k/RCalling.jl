@@ -33,27 +33,27 @@ int sexp_is_ascii(SEXP ss)
     return 1;
 }
 
-int sexp_named(const SEXP s)
+int sexp_named(const SEXP ss)
 {
-    int res = NAMED(s);
+    int res = NAMED(ss);
     return res;
 }
 
-int sexp_typeof(const SEXP s)
+int sexp_typeof(const SEXP ss)
 {
-    int res = TYPEOF(s);
+    int res = TYPEOF(ss);
     return res;
 }
 
-int sexp_length(const SEXP s)
+int sexp_length(const SEXP ss)
 {
-    int res = LENGTH(s);
+    int res = LENGTH(ss);
     return res;
 }
 
-int sexp_ndims(const SEXP s)
+int sexp_ndims(const SEXP ss)
 {
-    SEXP dims = Rf_getAttrib(s, R_DimSymbol);
+    SEXP dims = Rf_getAttrib(ss, R_DimSymbol);
     int res;
     if (Rf_isNull(dims))
         res = 1;
@@ -62,10 +62,10 @@ int sexp_ndims(const SEXP s)
     return res;
 }
 
-jl_tuple_t *sexp_size(const SEXP s)
+jl_tuple_t *sexp_size(const SEXP ss)
 {
     jl_tuple_t *d;
-    SEXP dims = Rf_getAttrib(s, R_DimSymbol);
+    SEXP dims = Rf_getAttrib(ss, R_DimSymbol);
 
     if (dims != R_NilValue)
     {
@@ -83,25 +83,24 @@ jl_tuple_t *sexp_size(const SEXP s)
     else
     {
         //list
-        d = jl_alloc_tuple(1);
         JL_GC_PUSH1(&d);
-        jl_tupleset(d, 0, jl_box_long(LENGTH(s)));
+        d = jl_tuple1(jl_box_long(LENGTH(ss)));
         JL_GC_POP();
     }
     return d;
 }
 
-jl_array_t *sexp_names(const SEXP s)
+jl_array_t *sexp_names(const SEXP ss)
 {
-    SEXP res = Rf_getAttrib(s, R_NamesSymbol);
+    SEXP res = Rf_getAttrib(ss, R_NamesSymbol);
     if (res == R_NilValue)
         return JL_NULL;
     return (jl_array_t *) rj_cast(res);
 }
 
-SEXP sexp_get_attr(const SEXP s, char *name)
+SEXP sexp_get_attr(const SEXP ss, char *name)
 {
-    SEXP res = Rf_getAttrib(s, Rf_install(name));
+    SEXP res = Rf_getAttrib(ss, Rf_install(name));
     if (Rf_isNull(res))
     {
         res = NULL;
@@ -112,11 +111,11 @@ SEXP sexp_get_attr(const SEXP s, char *name)
 }
 
 // one argument subset
-SEXP sexp_subset(const SEXP s, const SEXP i)
+SEXP sexp_subset(const SEXP ss, const SEXP i)
 {
     int errorOccurred;
     SEXP e, ret;
-    e = PROTECT(Rf_lang3(Rf_install(".subset"), s, i));
+    e = PROTECT(Rf_lang3(Rf_install(".subset"), ss, i));
     ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
     R_PreserveObject(ret);
     UNPROTECT(1);
@@ -124,11 +123,11 @@ SEXP sexp_subset(const SEXP s, const SEXP i)
 }
 
 // two arguments subset
-SEXP sexp_subset2(const SEXP s, const SEXP i, const SEXP j)
+SEXP sexp_subset2(const SEXP ss, const SEXP i, const SEXP j)
 {
     int errorOccurred;
     SEXP e, ret;
-    e = PROTECT(Rf_lang4(Rf_install(".subset"), s, i, j));
+    e = PROTECT(Rf_lang4(Rf_install(".subset"), ss, i, j));
     ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
     R_PreserveObject(ret);
     UNPROTECT(1);
@@ -136,11 +135,11 @@ SEXP sexp_subset2(const SEXP s, const SEXP i, const SEXP j)
 }
 
 // list subset
-SEXP sexp_listsubset(const SEXP s, const SEXP i)
+SEXP sexp_listsubset(const SEXP ss, const SEXP i)
 {
     int errorOccurred;
     SEXP e, ret;
-    e = PROTECT(Rf_lang3(Rf_install(".subset2"), s, i));
+    e = PROTECT(Rf_lang3(Rf_install(".subset2"), ss, i));
     ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
     R_PreserveObject(ret);
     UNPROTECT(1);
@@ -167,11 +166,11 @@ void *sexp_pointer(const SEXP x)
     return p;
 }
 
-void sexp_print(const SEXP s)
+void sexp_print(const SEXP ss)
 {
     int errorOccurred;
     SEXP e;
-    e = PROTECT(Rf_lang2(Rf_install("print"), s));
+    e = PROTECT(Rf_lang2(Rf_install("print"), ss));
     R_tryEval(e, R_GlobalEnv, &errorOccurred);
     UNPROTECT(1);
 }

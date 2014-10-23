@@ -32,9 +32,7 @@ static inline int list_has_names(SEXP ss)
     for(int i=0; i<LENGTH(v); i++)
     {
         if (INTEGER(v)[i]==0)
-        {
             return 0;
-        }
     }
     return 1;
 }

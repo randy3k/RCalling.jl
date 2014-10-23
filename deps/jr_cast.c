@@ -8,7 +8,7 @@ SEXP jr_cast(jl_value_t *tt, bool own);
 
 #define in_int32_range(x) x<=INT32_MAX && x>=INT32_MIN
 
-static inline bool jl_isa(jl_value_t* tt, char* type)
+static inline int jl_isa(jl_value_t* tt, char* type)
 {
     jl_value_t* atype = jl_get_global(jl_current_module, jl_symbol(type));
     if ((atype == NULL) || (! jl_is_datatype(atype)))
