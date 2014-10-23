@@ -12,7 +12,7 @@ function set_base_env()
 end
 
 function Base.getindex(x::REnvironment, i::ASCIIString)
-    ptr = ccall(rsym(:sexp_listsubset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x.ptr, convert(RArray, i).ptr)
+    ptr = ccall(rsym(:sexp_list_getindex), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x.ptr, convert(RArray, i).ptr)
     _factory(ptr)
 end
 

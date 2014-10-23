@@ -12,8 +12,8 @@ end
 
 # wrapper of julia objects
 function jr_cast(x, own::Bool=true)
-    ptr = ccall(rsym(:jr_cast), Ptr{Void}, (Ptr{Void}, Bool), pointer_from_objref(x), own)
-    _factory(ptr)
+    ptr = ccall(rsym(:jr_cast), Ptr{Void}, (Ptr{Void},), pointer_from_objref(x))
+    _factory(ptr, own)
 end
 
 # wrapper of julia objects
@@ -119,6 +119,11 @@ function release_object(s::RAny)
     ccall(rsym(:R_ReleaseObject), Void, (Ptr{Void},), s.ptr)
 end
 
+function preserve_object(s::RAny)
+    ccall(rsym(:R_PreserveObject), Void, (Ptr{Void},), s.ptr)
+end
+
+
 function _factory(ptr::Ptr{Void}, own::Bool=true)
     if ptr == C_NULL
         return None
@@ -154,6 +159,7 @@ function _factory(ptr::Ptr{Void}, own::Bool=true)
         obj = RObject(ptr)
     end
     if own
+        preserve_object(obj)
         finalizer(obj, release_object)
     end
     obj

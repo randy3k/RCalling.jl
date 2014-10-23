@@ -17,7 +17,6 @@ SEXP rcall_parse(SEXP cmd)
         return R_NilValue;
     }
     UNPROTECT(1);
-    R_PreserveObject(expr);
     return expr;
 }
 
@@ -37,6 +36,5 @@ SEXP rcall_eval(SEXP e, SEXP env)
         }
     }
     UNPROTECT(count);
-    R_PreserveObject(ans);
     return ans;
 }

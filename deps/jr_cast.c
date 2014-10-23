@@ -4,7 +4,7 @@
 #include <Rinternals.h>
 #include <julia.h>
 
-SEXP jr_cast(jl_value_t *tt, bool own);
+SEXP jr_cast(jl_value_t *tt);
 
 #define in_int32_range(x) x<=INT32_MAX && x>=INT32_MIN
 
@@ -346,15 +346,21 @@ SEXP jr_dict(jl_value_t *tt)
     SEXP ans = R_NilValue;
     SEXP rnames;
     jl_function_t *str = jl_get_function(jl_base_module, "string");
-    jl_array_t *ctt = (jl_array_t *) jl_call1(jl_get_function(jl_base_module, "collect"), tt);
-    size_t m = jl_array_len(ctt);
+    jl_function_t *getindex = jl_get_function(jl_base_module, "getindex");
+    jl_array_t *keys = (jl_array_t *) jl_call1(
+        jl_get_function(jl_base_module, "collect"),
+        jl_call1(jl_get_function(jl_base_module, "keys"), tt)
+    );
+    size_t m = jl_array_len(keys);
     PROTECT(rnames = Rf_allocVector(STRSXP, m));
     PROTECT(ans = Rf_allocVector(VECSXP, m));
-    jl_value_t *key;
+    jl_value_t *key, *value;
     for(size_t i=0; i<m; i++)
     {
-        SET_VECTOR_ELT(ans, i, jr_cast(jl_tupleref(jl_arrayref(ctt, i), 1), 0));
-        key = jl_call1(str, jl_tupleref(jl_arrayref(ctt, i), 0));
+        key = jl_arrayref(keys, i);
+        value = jl_call2(getindex, tt, key);
+        SET_VECTOR_ELT(ans, i, jr_cast(value));
+        key = jl_call1(str, key);
         SET_STRING_ELT(rnames, i, Rf_mkChar(jl_string_data(key)));
     }
     Rf_setAttrib(ans, R_NamesSymbol, rnames);
@@ -362,7 +368,7 @@ SEXP jr_dict(jl_value_t *tt)
     return ans;
 }
 
-SEXP jr_cast(jl_value_t *tt, bool own){
+SEXP jr_cast(jl_value_t *tt){
     SEXP ans = R_NilValue;
     JL_GC_PUSH1(&tt);
     if (jl_is_nothing(tt) || jl_is_null(tt))
@@ -388,7 +394,7 @@ SEXP jr_cast(jl_value_t *tt, bool own){
     {
         PROTECT(ans = Rf_allocVector(VECSXP, jl_tuple_len(tt)));
         for (int i = 0; i < jl_tuple_len(tt); i++)
-            SET_VECTOR_ELT(ans, i, jr_cast(jl_tupleref(tt, i), 0));
+            SET_VECTOR_ELT(ans, i, jr_cast(jl_tupleref(tt, i)));
         UNPROTECT(1);
     }
     else if(jl_isa(tt, "Dict"))
@@ -404,8 +410,5 @@ SEXP jr_cast(jl_value_t *tt, bool own){
     {
         jl_error("invaild object");
     }
-    if (own)
-        // TODO: possible to use other methods to protect ans? Preserve and Release
-        R_PreserveObject(ans);
     return ans;
 }

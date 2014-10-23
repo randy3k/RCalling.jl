@@ -13,7 +13,6 @@ SEXP sexp_eval_promise(const SEXP s)
         PROTECT(env = R_GlobalEnv);
     }
     PROTECT(t = Rf_eval(s, env));
-    // R_PreserveObject(t);
     UNPROTECT(2);
     return t;
 }
@@ -63,10 +62,6 @@ SEXP rcall_call(SEXP fun_R, SEXP *argv, int argc, char **argn, SEXP env)
     if (errorOccurred) {
         res_R = R_NilValue;
     }
-    else
-    {
-        R_PreserveObject(res_ok);
-    }
     UNPROTECT(count);
     return res_ok;
 }
@@ -83,7 +78,6 @@ SEXP jr_func_wrap(void* p)
     int errorOccurred = 0;
     SEXP ret;
     ret = PROTECT(R_tryEval(VECTOR_ELT(s,0), R_GlobalEnv, &errorOccurred));
-    R_PreserveObject(ret);
     UNPROTECT(3);
     return ret;
 }

@@ -10,15 +10,17 @@ end
 # Note:only string vector and matrix are support
 # string vector getter
 
-function Base.getindex{N}(x::RArray{UTF8String, N}, i)
-    ptr = ccall(rsym(:sexp_subset), Ptr{Void}, (Ptr{Void}, Ptr{Void}), x.ptr, convert(RArray, i).ptr)
+function Base.getindex{T<:ByteString, N}(x::RArray{T, N}, i)
+    ptr = ccall(rsym(:sexp_getindex), Ptr{Void}, (Ptr{Void}, Ptr{Void}),
+    	x.ptr, pointer_from_objref(i))
     _factory(ptr)
 end
 
 # string matrix getter
 
-function Base.getindex(x::RArray{UTF8String, 2}, i, j)
-    ptr = ccall(rsym(:sexp_subset2), Ptr{Void}, (Ptr{Void}, Ptr{Void}, Ptr{Void}), x.ptr, convert(RArray, i).ptr, convert(RArray, j).ptr)
+function Base.getindex{T<:ByteString}(x::RArray{T, 2}, i, j)
+    ptr = ccall(rsym(:sexp_getindex2), Ptr{Void}, (Ptr{Void}, Ptr{Void}, Ptr{Void}),
+    	x.ptr, pointer_from_objref(i), pointer_from_objref(j))
     _factory(ptr)
 end
 

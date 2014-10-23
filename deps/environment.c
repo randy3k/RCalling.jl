@@ -29,6 +29,5 @@ SEXP rcall_findVar(char *v, SEXP env)
         fun = sexp_eval_promise(fun);
     }
     UNPROTECT(1);
-    R_PreserveObject(fun);
     return fun;
 }

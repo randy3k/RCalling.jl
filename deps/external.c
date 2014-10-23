@@ -4,7 +4,7 @@
 #include <R_ext/Rdynload.h>
 #include <julia.h>
 
-extern SEXP jr_cast(jl_value_t *tt, int own);
+extern SEXP jr_cast(jl_value_t *tt);
 extern jl_value_t *rj_cast(SEXP ss);
 
 static SEXP do_julia(SEXP args)
@@ -33,7 +33,7 @@ static SEXP do_julia(SEXP args)
 
     if (ans == NULL)
         return R_NilValue;
-    return jr_cast(ans, 1);
+    return jr_cast(ans);
 }
 
 void rcall_register_routines()

@@ -4,6 +4,7 @@
 #include <julia.h>
 
 extern jl_value_t *rj_cast(SEXP ss);
+extern SEXP jr_cast(const jl_value_t *tt);
 
 
 #define UTF8_MASK (1<<3)
@@ -102,46 +103,60 @@ SEXP sexp_get_attr(const SEXP ss, char *name)
 {
     SEXP res = Rf_getAttrib(ss, Rf_install(name));
     if (Rf_isNull(res))
-    {
         res = NULL;
-    } else {
-        R_PreserveObject(res);
-    }
     return res;
 }
 
 // one argument subset
-SEXP sexp_subset(const SEXP ss, const SEXP i)
+SEXP sexp_getindex_(const SEXP ss, const SEXP i)
 {
     int errorOccurred;
     SEXP e, ret;
     e = PROTECT(Rf_lang3(Rf_install(".subset"), ss, i));
     ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
-    R_PreserveObject(ret);
+    UNPROTECT(1);
+    return ret;
+}
+
+SEXP sexp_getindex(const SEXP ss, const jl_value_t* i)
+{
+    SEXP ir = PROTECT(jr_cast(i));
+    SEXP ret = R_NilValue;
+    ret = sexp_getindex_(ss, ir);
     UNPROTECT(1);
     return ret;
 }
 
 // two arguments subset
-SEXP sexp_subset2(const SEXP ss, const SEXP i, const SEXP j)
+SEXP sexp_getindex2_(const SEXP ss, const SEXP i, const SEXP j)
 {
     int errorOccurred;
     SEXP e, ret;
     e = PROTECT(Rf_lang4(Rf_install(".subset"), ss, i, j));
     ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
-    R_PreserveObject(ret);
     UNPROTECT(1);
     return ret;
 }
 
+SEXP sexp_getindex2(const SEXP ss, const jl_value_t* i, const jl_value_t* j)
+{
+    SEXP ir = PROTECT(jr_cast(i));
+    SEXP jr = PROTECT(jr_cast(j));
+    SEXP ret = R_NilValue;
+    ret = sexp_getindex2_(ss, ir, jr);
+    UNPROTECT(2);
+    return ret;
+}
+
+// TODO: multiple arguments getter
+
 // list subset
-SEXP sexp_listsubset(const SEXP ss, const SEXP i)
+SEXP sexp_list_getindex(const SEXP ss, const SEXP i)
 {
     int errorOccurred;
     SEXP e, ret;
     e = PROTECT(Rf_lang3(Rf_install(".subset2"), ss, i));
     ret = R_tryEval(e, R_GlobalEnv, &errorOccurred);
-    R_PreserveObject(ret);
     UNPROTECT(1);
     return ret;
 }
