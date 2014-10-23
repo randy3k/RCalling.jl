@@ -20,7 +20,7 @@ static inline int jl_isa(jl_value_t* tt, char* type)
 SEXP jr_scalar(jl_value_t *tt)
 {
     SEXP ans = R_NilValue;
-    double tmpfloat;
+    double z;
     // float64, int64, int32 are most common, so put them in the front
     if (jl_is_float64(tt))
     {
@@ -34,11 +34,11 @@ SEXP jr_scalar(jl_value_t *tt)
     }
     else if (jl_is_int64(tt))
     {
-        tmpfloat=(double)jl_unbox_int64(tt);
-        if (in_int32_range(tmpfloat))
+        z = (double)jl_unbox_int64(tt);
+        if (in_int32_range(z))
             PROTECT(ans = Rf_ScalarInteger((int32_t)jl_unbox_int64(tt)));
         else
-            PROTECT(ans = Rf_ScalarReal(tmpfloat));
+            PROTECT(ans = Rf_ScalarReal(z));
         UNPROTECT(1);
     }
     else if (jl_is_bool(tt))
@@ -68,20 +68,20 @@ SEXP jr_scalar(jl_value_t *tt)
     }
     else if (jl_is_uint32(tt))
     {
-        tmpfloat=(double)jl_unbox_uint32(tt);
-        if (in_int32_range(tmpfloat))
+        z = (double)jl_unbox_uint32(tt);
+        if (in_int32_range(z))
             PROTECT(ans = Rf_ScalarInteger((int32_t)jl_unbox_uint32(tt)));
         else
-            PROTECT(ans = Rf_ScalarReal(tmpfloat));
+            PROTECT(ans = Rf_ScalarReal(z));
         UNPROTECT(1);
     }
     else if (jl_is_uint64(tt))
     {
-        tmpfloat=(double)jl_unbox_int64(tt);
-        if (in_int32_range(tmpfloat))
+        z = (double)jl_unbox_int64(tt);
+        if (in_int32_range(z))
             PROTECT(ans = Rf_ScalarInteger((int32_t)jl_unbox_uint64(tt)));
         else
-            PROTECT(ans = Rf_ScalarReal(tmpfloat));
+            PROTECT(ans = Rf_ScalarReal(z));
         UNPROTECT(1);
     }
     else if (jl_is_float32(tt))
