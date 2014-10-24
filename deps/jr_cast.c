@@ -139,9 +139,9 @@ SEXP jr_array(jl_value_t *tt)
     {
         int is_int32 = 1;
         int64_t *p = (int64_t *) jl_array_data(tt);
-        for (size_t ii=0;ii<len;ii++)
+        for (size_t i=0;i<len;i++)
         {
-            if (p[ii]>INT32_MAX || p[ii]<INT32_MIN)
+            if (p[i]>INT32_MAX || p[i]<INT32_MIN)
             {
                 is_int32 = 0;
                 break;
@@ -200,9 +200,9 @@ SEXP jr_array(jl_value_t *tt)
     {
         int is_int32 = 1;
         uint32_t *p = (uint32_t *) jl_array_data(tt);
-        for (size_t ii=0;ii<len;ii++)
+        for (size_t i=0;i<len;i++)
         {
-            if (p[ii]>INT32_MAX || p[ii]<INT32_MIN)
+            if (p[i]>INT32_MAX || p[i]<INT32_MIN)
             {
                 is_int32 = 0;
                 break;
@@ -225,9 +225,9 @@ SEXP jr_array(jl_value_t *tt)
     {
         int is_int32 = 1;
         uint64_t *p = (uint64_t *) jl_array_data(tt);
-        for (size_t ii=0;ii<len;ii++)
+        for (size_t i=0;i<len;i++)
         {
-            if (p[ii]>INT32_MAX || p[ii]<INT32_MIN)
+            if (p[i]>INT32_MAX || p[i]<INT32_MIN)
             {
                 is_int32 = 0;
                 break;
