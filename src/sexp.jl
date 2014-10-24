@@ -26,15 +26,16 @@ end
 # Base.show(io::IO, s::RAny) = print(io, typeof(s))
 
 # print function
-function Base.show(io::IO, s::RAny)
+Base.show(io::IO, s::RAny) = rprint(io, s)
+
+function rprint(io::IO, s::RAny)
     if s.ptr == C_NULL
         return
     end
-    # TODO: redirect rprint
     oldout = STDOUT
     (rd,wr) = redirect_stdout()
     start_reading(rd)
-    ccall(rsym(:sexp_print), Void, (Ptr{Void},), s.ptr)
+    ccall(rsym(:Rf_PrintValue), Void, (Ptr{Void},), s.ptr)
     flush_cstdio()
     redirect_stdout(oldout)
     close(wr)
@@ -42,7 +43,6 @@ function Base.show(io::IO, s::RAny)
     close(rd)
     nothing
 end
-rprint(s::RAny) = rprint(STDOUT, s)
 
 # general RAny functions
 

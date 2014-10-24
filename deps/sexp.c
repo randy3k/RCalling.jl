@@ -5,7 +5,6 @@
 
 extern jl_value_t *rj_cast(SEXP ss);
 extern SEXP jr_cast(const jl_value_t *tt);
-extern void Rf_PrintValue(SEXP);
 
 
 #define UTF8_MASK (1<<3)
@@ -180,14 +179,4 @@ void *sexp_pointer(const SEXP x)
             p = 0;
     }
     return p;
-}
-
-void sexp_print(const SEXP ss)
-{
-    // int errorOccurred;
-    // SEXP e;
-    // e = PROTECT(Rf_lang2(Rf_install("print"), ss));
-    // R_tryEval(e, R_GlobalEnv, &errorOccurred);
-    // UNPROTECT(1);
-    Rf_PrintValue(ss);
 }
