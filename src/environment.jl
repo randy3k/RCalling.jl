@@ -97,7 +97,7 @@ end
 macro rusing(x)
     symbol = Expr(:quote, x)
     quote
-        @rimport($x)
-        eval(Expr(:toplevel, Expr(:using, $symbol)))
+        @rimport $(esc(x))
+        eval(Expr(:using, $symbol))
     end
 end
