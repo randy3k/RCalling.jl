@@ -98,6 +98,6 @@ macro rusing(x)
     symbol = Expr(:quote, x)
     quote
         @rimport $(esc(x))
-        eval(Expr(:using, $symbol))
+        Main.eval(Expr(:using, $symbol))
     end
 end
