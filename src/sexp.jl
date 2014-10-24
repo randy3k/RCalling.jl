@@ -10,23 +10,23 @@ for t in (:(RArray{T, N}), :RList, :RFunction, :REnvironment, :RExpression, :RFu
     end
 end
 
-# wrapper of julia objects
+# julia objects cast to r objects
 function jr_cast(x, own::Bool=true)
     ptr = ccall(rsym(:jr_cast), Ptr{Void}, (Ptr{Void},), pointer_from_objref(x))
     _factory(ptr, own)
 end
 
-# wrapper of julia objects
+# r objects cast to julia objects
 function rj_cast(x::RAny)
     ptr = ccall(rsym(:rj_cast), Ptr{Any}, (Ptr{Void},), x.ptr)
     unsafe_pointer_to_objref(ptr)
 end
 
 # print function
-Base.show(io::IO, s::RAny) = print(io, typeof(s))
+# Base.show(io::IO, s::RAny) = print(io, typeof(s))
 
 # print function
-function rprint(io::IO, s::RAny)
+function Base.show(io::IO, s::RAny)
     if s.ptr == C_NULL
         return
     end

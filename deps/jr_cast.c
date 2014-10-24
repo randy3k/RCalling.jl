@@ -412,3 +412,10 @@ SEXP jr_cast(jl_value_t *tt){
     }
     return ans;
 }
+
+// SEXP jr_cast_arg(jl_array_t *tt)
+// {
+//     SEXP ans = PROTECT(Rf_allocVector(VECSXP, )
+//     size_t n = jl_array_len(tt);
+//     for()
+// }

@@ -183,9 +183,5 @@ void *sexp_pointer(const SEXP x)
 
 void sexp_print(const SEXP ss)
 {
-    int errorOccurred;
-    SEXP e;
-    e = PROTECT(Rf_lang2(Rf_install("print"), ss));
-    R_tryEval(e, R_GlobalEnv, &errorOccurred);
-    UNPROTECT(1);
+    Rf_PrintValueRec(ss, R_GlobalEnv);
 }

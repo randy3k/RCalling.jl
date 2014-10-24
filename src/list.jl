@@ -16,19 +16,19 @@ end
 Base.keys(x::RList) = names(x)
 
 # print function
-function Base.show(io::IO, s::RList)
-    if s.ptr == C_NULL
-        return
-    end
-    try
-        c = join(class(s), " ")
-        print(io, typeof(s), "{$c}")
-    catch
-        print(io, typeof(s))
-    end
+# function Base.show(io::IO, s::RList)
+#     if s.ptr == C_NULL
+#         return
+#     end
+#     try
+#         c = join(class(s), " ")
+#         print(io, typeof(s), "{$c}")
+#     catch
+#         print(io, typeof(s))
+#     end
 
-    nothing
-end
+#     nothing
+# end
 
 # converter
 function Base.convert(::Type{DataFrame}, x::RList)

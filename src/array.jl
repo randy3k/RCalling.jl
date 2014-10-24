@@ -13,11 +13,11 @@ typealias RVecOrMat{T} Union(RArray{T, 1}, RArray{T, 2})
 
 Base.summary(a::RArray) = string(Base.dims2string(size(a)), " ", typeof(a))
 
-function Base.show{T, N}(io::IO, x::RArray{T, N})
-    println(io, summary(x))
-    rprint(io, x)
-    nothing
-end
+# function Base.show{T, N}(io::IO, x::RArray{T, N})
+#     println(io, summary(x))
+#     rprint(io, x)
+#     nothing
+# end
 
 Base.start(x::RArray) = 1
 Base.endof(x::RArray) = length(x)
