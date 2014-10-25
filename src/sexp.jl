@@ -23,9 +23,6 @@ function rj_cast(x::RAny)
 end
 
 # print function
-# Base.show(io::IO, s::RAny) = print(io, typeof(s))
-
-# print function
 Base.show(io::IO, s::RAny) = rprint(io, s)
 
 function rprint(io::IO, s::RAny)
@@ -109,12 +106,6 @@ const SexpType = Dict([
 ])
 
 
-const SexpType_to_JType = Dict([
-    (:LGLSXP, Bool),
-    (:INTSXP, Int32),
-    (:REALSXP, Float64)
-])
-
 function release_object(s::RAny)
     ccall(rsym(:R_ReleaseObject), Void, (Ptr{Void},), s.ptr)
 end
@@ -131,17 +122,20 @@ function _factory(ptr::Ptr{Void}, own::Bool=true)
     t = SexpType[ccall(rsym(:sexp_typeof), Int32, (Ptr{Void},), ptr)]
 
     if t in (:LGLSXP, :INTSXP, :REALSXP, :STRSXP)
-        N = ccall(rsym(:sexp_ndims), Int, (Ptr{Void},), ptr)
-
         if t == :STRSXP
             if is_ascii(ptr) == 1
                 T = ASCIIString
             else
                 T = UTF8String
             end
-        else
-            T = SexpType_to_JType[t]
+        elseif t == :LGLSXP
+            T = Bool
+        elseif t == INTSXP
+            T = Int32
+        elseif t == :REALSXP
+            T = Float64
         end
+        N = ccall(rsym(:sexp_ndims), Int, (Ptr{Void},), ptr)
         obj = RArray{T, N}(ptr)
     elseif t == :VECSXP
         obj = RList(ptr)
