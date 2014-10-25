@@ -95,9 +95,9 @@ macro rimport(x, args...)
 end
 
 macro rusing(x)
-    symbol = Expr(:quote, x)
+    sym = Expr(:quote, x)
     quote
         @rimport $(esc(x))
-        Main.eval(Expr(:using, $symbol))
+        eval(current_module(), Expr(:using, :., $sym))
     end
 end
