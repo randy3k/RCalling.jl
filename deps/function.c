@@ -1,7 +1,11 @@
 #define R_NO_REMAP
 #include <R.h>
 #include <Rinternals.h>
-#include <R_ext/Parse.h>
+#include <julia.h>
+
+extern int jl_isa(jl_value_t* tt, char* type);
+extern SEXP jr_cast(jl_value_t *tt);
+
 
 SEXP sexp_eval_promise(const SEXP s)
 {
@@ -17,67 +21,62 @@ SEXP sexp_eval_promise(const SEXP s)
     return t;
 }
 
-SEXP rcall_call(SEXP fun_R, SEXP *argv, int argc, char **argn, SEXP env)
+SEXP make_call(SEXP fun, jl_array_t *argv, jl_array_t *argn)
 {
-
     // make call
+    int argc = jl_array_len(argv);
     int count = 0;
     SEXP s, t;
     PROTECT(s = t = Rf_allocVector(LANGSXP, argc+1));
     count++;
-    SETCAR(t, fun_R);
+    SETCAR(t, fun);
     t = CDR(t);
     /* iterate over the arguments */
-    int arg_i;
-    char *arg_name;
-    for (arg_i = 0; arg_i < argc; arg_i++)
+    int i;
+    jl_value_t *argvi;
+    SEXP u;
+    char *name;
+    for (i = 0; i < argc; i++)
     {
-        SETCAR(t, argv[arg_i]);
-        arg_name = argn[arg_i];
-        if (strlen(arg_name) > 0) {
-            SET_TAG(t, Rf_install(arg_name));
+        argvi = jl_arrayref(argv, i);
+        if (jl_isa(argvi, "RAny"))
+        {
+            u = jl_unbox_voidpointer(jl_get_nth_field(argvi, 0));
+        }
+        else
+        {
+            u = PROTECT(jr_cast(argvi));
+            count++;
+        }
+        SETCAR(t, u);
+        name = jl_string_data(jl_arrayref(argn, i));
+        if (strlen(name) > 0) {
+            SET_TAG(t, Rf_install(name));
         }
         t = CDR(t);
     }
+    UNPROTECT(count);
+    return s;
+}
 
-    // call
+SEXP rcall(SEXP fun, jl_array_t *argv, jl_array_t *argn, SEXP env)
+{
+    int count = 0;
+    SEXP ret;
     int errorOccurred = 0;
-    SEXP res_R;
-    res_R = PROTECT(R_tryEval(s, env, &errorOccurred));
+
+    SEXP e = PROTECT(make_call(fun, argv, argn));
+    count++;
+    ret = PROTECT(R_tryEval(e, env, &errorOccurred));
     count++;
     if (errorOccurred)
     {
         UNPROTECT(count);
-        return NULL;
+        return R_NilValue;
     }
-    SEXP res_ok;
-    if (TYPEOF(res_R) == PROMSXP)
-    {
-        res_ok = sexp_eval_promise(res_R);
-    }
-    else
-    {
-        res_ok = res_R;
-    }
-    if (errorOccurred) {
-        res_R = R_NilValue;
-    }
-    UNPROTECT(count);
-    return res_ok;
-}
+    if (TYPEOF(ret) == PROMSXP)
+        ret = sexp_eval_promise(ret);
 
-SEXP jr_func_wrap(void* p)
-{
-    ParseStatus status;
-    SEXP s, t, ext;
-    s = t = PROTECT(R_ParseVector(
-        Rf_mkString("function(...) {.External(\".RCall\", NULL, ...)}"),
-        -1, &status, R_NilValue));
-    ext = PROTECT(R_MakeExternalPtr(p, R_NilValue, R_NilValue));
-    SETCADDR(CADR(CADDR(VECTOR_ELT(t ,0))), ext);
-    int errorOccurred = 0;
-    SEXP ret;
-    ret = PROTECT(R_tryEval(VECTOR_ELT(s,0), R_GlobalEnv, &errorOccurred));
-    UNPROTECT(3);
+    UNPROTECT(count);
     return ret;
 }

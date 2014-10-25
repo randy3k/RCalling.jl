@@ -130,7 +130,7 @@ function _factory(ptr::Ptr{Void}, own::Bool=true)
             end
         elseif t == :LGLSXP
             T = Bool
-        elseif t == INTSXP
+        elseif t == :INTSXP
             T = Int32
         elseif t == :REALSXP
             T = Float64

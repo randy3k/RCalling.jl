@@ -2,19 +2,13 @@
 #include <stdbool.h>
 #include <R.h>
 #include <Rinternals.h>
+#include <R_ext/Parse.h>
 #include <julia.h>
 
+extern int jl_isa(jl_value_t* tt, char* type);
 SEXP jr_cast(jl_value_t *tt);
 
 #define in_int32_range(x) x<=INT32_MAX && x>=INT32_MIN
-
-static inline int jl_isa(jl_value_t* tt, char* type)
-{
-    jl_value_t* atype = jl_get_global(jl_current_module, jl_symbol(type));
-    if ((atype == NULL) || (! jl_is_datatype(atype)))
-        return 0;
-    return jl_subtype(tt, atype, 1);
-}
 
 // adapted from https://github.com/armgong/RJulia/blob/master/src/R_Julia.c
 SEXP jr_scalar(jl_value_t *tt)
@@ -368,6 +362,23 @@ SEXP jr_dict(jl_value_t *tt)
     return ans;
 }
 
+SEXP jr_func(void* p)
+{
+    ParseStatus status;
+    SEXP s, t, ext;
+    s = t = PROTECT(R_ParseVector(
+        Rf_mkString("function(...) {.External(\".RCall\", NULL, ...)}"),
+        -1, &status, R_NilValue));
+    ext = PROTECT(R_MakeExternalPtr(p, R_NilValue, R_NilValue));
+    SETCADDR(CADR(CADDR(VECTOR_ELT(t ,0))), ext);
+    int errorOccurred = 0;
+    SEXP ret;
+    ret = PROTECT(R_tryEval(VECTOR_ELT(s,0), R_GlobalEnv, &errorOccurred));
+    UNPROTECT(3);
+    return ret;
+}
+
+
 SEXP jr_cast(jl_value_t *tt){
     SEXP ans = R_NilValue;
     JL_GC_PUSH1(&tt);
@@ -400,6 +411,10 @@ SEXP jr_cast(jl_value_t *tt){
     else if(jl_isa(tt, "Dict"))
     {
         ans = jr_dict(tt);
+    }
+    else if(jl_is_function(tt))
+    {
+        ans = jr_func(tt);
     }
     else
     {

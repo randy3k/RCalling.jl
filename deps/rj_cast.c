@@ -5,6 +5,7 @@
 #include <julia.h>
 
 extern int sexp_is_ascii(SEXP ss);
+extern int r_isa(SEXP ss, const char *name);
 extern jl_tuple_t *sexp_size(const SEXP s);
 extern jl_array_t *sexp_names(const SEXP s);
 jl_value_t *rj_cast(SEXP ss);
@@ -100,14 +101,6 @@ static inline jl_array_t *array_is_na(SEXP ss){
     }
     JL_GC_POP();
     return na;
-}
-
-static inline int r_isa(SEXP ss, const char *name)
-{
-    SEXP cls = Rf_getAttrib(ss, R_ClassSymbol);
-    if (cls == R_NilValue) return 0;
-    if (strcmp(CHAR(STRING_ELT(cls, 0)), name)==0) return 1;
-    return 0;
 }
 
 // adapted from https://github.com/armgong/RJulia/blob/master/src/R_Julia.c

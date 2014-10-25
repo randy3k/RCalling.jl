@@ -2,12 +2,9 @@
 # RFunction(f::Function) = Base.convert(RFunction, f)
 
 function rcall(f::RFunction, argv::Vector, argn::Vector{ASCIIString}, env::REnvironment)
-    n::Int32 = length(argv)
-    argv_p = map((x)->x.ptr, argv)
-    argn_p = map((x)->pointer(x.data), argn)
-    ret = ccall(rsym(:rcall_call), Ptr{Void},
-                  (Ptr{Void}, Ptr{Ptr{Void}}, Int32, Ptr{Ptr{Uint8}}, Ptr{Void}),
-                  f.ptr, argv_p, n, argn_p, env.ptr
+    ret = ccall(rsym(:rcall), Ptr{Void},
+                  (Ptr{Void}, Ptr{Void}, Ptr{Void}, Ptr{Void}),
+                  f.ptr, pointer_from_objref(argv), pointer_from_objref(argn), env.ptr
     )
     _factory(ret)
 end
@@ -23,12 +20,7 @@ function Base.convert(::Type{Function}, f::RFunction)
         argn_unnamed = ASCIIString["" for x in args]
         argv_named = Any[x[2] for x in kwargs]
         argn_named = ASCIIString[string(x[1]) for x in kwargs]
-
-        # TOOD: it should be more efficient to do conversions in c
-        argv = vcat([typeof(a) <: RAny ? a : convert(RAny, a) for a in argv_unnamed],
-            [typeof(a) <: RAny ? a : convert(RAny, a) for a in argv_named])
-
-        ret = rcall(f, argv, vcat(argn_unnamed, argn_named))
+        ret = rcall(f, vcat(argv_unnamed, argv_named), vcat(argn_unnamed, argn_named))
         return ret
     end
 end
@@ -36,6 +28,6 @@ end
 # convert
 
 function Base.convert(::Type{RFunction}, f::Function)
-    ret = ccall(rsym(:jr_func_wrap), Ptr{Void}, (Ptr{Void},), pointer_from_objref(f))
+    ret = ccall(rsym(:jr_func), Ptr{Void}, (Ptr{Void},), pointer_from_objref(f))
     _factory(ret)
 end
