@@ -2,7 +2,7 @@
 abstract RAny
 
 # R objects
-for t in (:(RArray{T, N}), :RList, :RFunction, :REnvironment, :RExpression, :RFunctionCall, :RObject, :RNull)
+for t in (:(RArray{T, N}), :RList, :RFunction, :REnvironment, :RExpression, :RObject, :RNull)
     @eval begin
         type $t <: RAny
             ptr::Ptr{Void}
@@ -145,8 +145,6 @@ function _factory(ptr::Ptr{Void}, own::Bool=true)
         obj = REnvironment(ptr)
     elseif t == :EXPRSXP
         obj = RExpression(ptr)
-    elseif t == :LANGSXP
-        obj = RFunctionCall(ptr)
     elseif t == :NILSXP
         return RNull(ptr)
     else

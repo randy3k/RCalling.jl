@@ -4,7 +4,7 @@ using DataFrames: DataFrame, DataArray, PooledDataArray
 export DataFrame, DataArray, PooledDataArray
 
 # R objects
-export RAny, RArray, RList, RFunction, REnvironment, RExpression, RFunctionCall, RObject, RNull
+export RAny, RArray, RList, RFunction, REnvironment, RExpression, RObject, RNull
 export RVector, RMatrix
 # R object function
 export class, attr, rtypeof
