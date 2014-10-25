@@ -1,6 +1,3 @@
-# RList(x::DataFrame) = jr_cast(x)
-# RList(x::Dict) = jr_cast(x)
-
 # list getter
 
 function Base.getindex(x::RList, i)
@@ -14,21 +11,6 @@ end
 # RList function
 
 Base.keys(x::RList) = names(x)
-
-# print function
-# function Base.show(io::IO, s::RList)
-#     if s.ptr == C_NULL
-#         return
-#     end
-#     try
-#         c = join(class(s), " ")
-#         print(io, typeof(s), "{$c}")
-#     catch
-#         print(io, typeof(s))
-#     end
-
-#     nothing
-# end
 
 # converter
 function Base.convert(::Type{DataFrame}, x::RList)

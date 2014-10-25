@@ -1,6 +1,3 @@
-# outer constructor
-# RFunction(f::Function) = Base.convert(RFunction, f)
-
 function rcall(f::RFunction, argv::Vector, argn::Vector{ASCIIString}, env::REnvironment)
     ret = ccall(rsym(:rcall), Ptr{Void},
                   (Ptr{Void}, Ptr{Void}, Ptr{Void}, Ptr{Void}),
