@@ -17,9 +17,6 @@ export rcall, rprint, @rimport, @rusing
 # get/setter
 export @Rpush, @Rpull, rget, rassign
 
-# build julia to r interface
-include("build.jl")
-
 # initialize r
 include("init.jl")
 
@@ -46,7 +43,7 @@ include("operator.jl")
 include("graphics.jl")
 
 # start engine
-handler = dlopen(shared_file)
+handler = dlopen(joinpath(Pkg.dir(), "RCall", "deps", "librcall.so"))
 # TODO: symbol cache
 rsym(s) = dlsym(handler, s)
 init()

@@ -9,7 +9,7 @@ end
 searchdir(path,key) = filter(x->contains(x,key), readdir(path))
 
 # build the Embedded R
-shared_file = packpath("deps", "rcall.so")
+shared_file = packpath("deps", "librcall.so")
 deps = packpath("deps")
 
 rebuild = false

@@ -13,13 +13,13 @@ LDFLAGS := $(LDFLAGS)
 SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:.c=.o)
 
-all: $(OBJECTS) rcall.so
+all: $(OBJECTS) librcall.so
 
 .c.o :
 	$(CC) $(CFLAGS) $(CPPFLAGS) -fPIC -c $< -o $@
 
-rcall.so: $(OBJECTS)
-	$(CC) -shared $(OBJECTS) $(LDFLAGS) -o rcall.so
+librcall.so: $(OBJECTS)
+	$(CC) -shared $(OBJECTS) $(LDFLAGS) -o librcall.so
 
 .PHONY : clean
 
