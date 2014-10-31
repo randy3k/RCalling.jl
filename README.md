@@ -13,6 +13,7 @@ Installation
 
 ```
 Pkg.clone("https://github.com/randy3k/RCall.jl.git")
+Pkg.build("RCall")
 ```
 
 Developed on Mac OSX 10.10, R 3.1.1, Julia 0.3.1
