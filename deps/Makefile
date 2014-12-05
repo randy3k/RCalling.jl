@@ -6,7 +6,7 @@ CFLAGS = -g -O2 -std=gnu99 -Wall -I./uv/
 CFLAGS += -I$(shell julia -e 'print(abspath(joinpath(JULIA_HOME,"..","include", "julia")))')
 CFLAGS := $(CFLAGS)
 
-LDFLAGS = $(shell R CMD config --ldflags) -dynamiclib -ljulia
+LDFLAGS = $(shell R CMD config --ldflags) -ljulia
 LDFLAGS += -L$(shell julia -e 'print(dirname(Sys.dlpath(dlopen("libjulia"))))')
 LDFLAGS := $(LDFLAGS)
 
