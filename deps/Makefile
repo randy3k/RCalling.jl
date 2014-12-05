@@ -8,9 +8,12 @@ CFLAGS += -I$(shell julia -e 'print(abspath(joinpath(JULIA_HOME,"..","include", 
 CFLAGS := $(CFLAGS)
 
 RRPATH := -Wl,-rpath,$(R_HOME)/lib
+RBLAS := $(shell R CMD config BLAS_LIBS)
+RLAPACK := $(shell R CMD config LAPACK_LIBS)
+
 LDFLAGS = $(shell R CMD config --ldflags) -ljulia
 LDFLAGS += -L$(shell julia -e 'print(dirname(Sys.dlpath(dlopen("libjulia"))))')
-LDFLAGS := $(LDFLAGS) $(RRPATH)
+LDFLAGS := $(LDFLAGS) $(RRPATH) $(RBLAS) $(RLAPACK)
 
 SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:.c=.o)
