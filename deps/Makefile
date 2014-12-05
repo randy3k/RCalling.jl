@@ -1,3 +1,4 @@
+R_HOME := $(shell R RHOME)
 CC = gcc
 CPPFLAGS = $(shell R CMD config --cppflags)
 CPPFLAGS := $(CPPFLAGS)
@@ -6,9 +7,10 @@ CFLAGS = -g -O2 -std=gnu99 -Wall -I./uv/
 CFLAGS += -I$(shell julia -e 'print(abspath(joinpath(JULIA_HOME,"..","include", "julia")))')
 CFLAGS := $(CFLAGS)
 
+RRPATH := -Wl,-rpath,$(R_HOME)/lib
 LDFLAGS = $(shell R CMD config --ldflags) -ljulia
 LDFLAGS += -L$(shell julia -e 'print(dirname(Sys.dlpath(dlopen("libjulia"))))')
-LDFLAGS := $(LDFLAGS)
+LDFLAGS := $(LDFLAGS) $(RRPATH)
 
 SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:.c=.o)
