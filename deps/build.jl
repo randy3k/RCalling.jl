@@ -1,9 +1,9 @@
 function packpath(dir::String, name::String)
-    return joinpath(Pkg.dir(), "RCall", dir, name)
+    return joinpath(Pkg.dir(), "RCalling", dir, name)
 end
 
 function packpath(dir::String)
-    return joinpath(Pkg.dir(), "RCall", dir)
+    return joinpath(Pkg.dir(), "RCalling", dir)
 end
 
 searchdir(path,key) = filter(x->contains(x,key), readdir(path))

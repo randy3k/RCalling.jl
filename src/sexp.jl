@@ -72,7 +72,7 @@ function named(s::RAny)
 end
 
 function marked(s::RAny)
-    ccall(RCall.rsym(:sexp_mark), Int, (Ptr{Void},), s.ptr)
+    ccall(RCalling.rsym(:sexp_mark), Int, (Ptr{Void},), s.ptr)
 end
 
 function rtypeof(s::RAny)
@@ -176,7 +176,7 @@ function Base.convert(::Type{RAny}, x)
     elseif t<: Dict
         return convert(RList, x)
     else
-        error("RCall does not know how to covert it.")
+        error("RCalling does not know how to covert it.")
         return x
     end
 end

@@ -1,4 +1,4 @@
-module RCall
+module RCalling
 
 using DataFrames: DataFrame, DataArray, PooledDataArray
 export DataFrame, DataArray, PooledDataArray
@@ -43,7 +43,7 @@ include("operator.jl")
 include("graphics.jl")
 
 # start engine
-handler = dlopen(joinpath(Pkg.dir(), "RCall", "deps", "librcall.so"))
+handler = dlopen(joinpath(Pkg.dir(), "RCalling", "deps", "librcall.so"))
 # TODO: symbol cache
 rsym(s) = dlsym(handler, s)
 init()
