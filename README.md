@@ -1,6 +1,6 @@
 An R interface of Julia.
 ====
-[![Build Status](https://travis-ci.org/randy3k/RCall.jl.svg?branch=master)](https://travis-ci.org/randy3k/RCall.jl)
+[![Build Status](https://travis-ci.org/randy3k/RCalling.jl.svg?branch=master)](https://travis-ci.org/randy3k/RCall.jl)
 
 It is based one the work of [Rif](https://github.com/lgautier/Rif.jl) and [RJulia](https://github.com/armgong/RJulia). Since the development of Rif has been slowed down and I wanted to learn more about the Julia and R, I started this project.
 
