@@ -23,7 +23,7 @@ Developed on Mac OSX 10.10, R 3.1.2, Julia 0.3.2
 
 Demo
 ------
-[General usage](http://rtalks.net/RCalling.jl)
+[General usage](http://randylai.me/RCalling.jl)
 
 Credits
 ------
